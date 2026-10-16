@@ -1,0 +1,59 @@
+{
+  "name": "penny",
+  "productName": "Penny",
+  "version": "1.8.0",
+  "description": "Penny — every cent, in focus. Private personal finance for Windows.",
+  "main": "bootstrap.js",
+  "author": "Akrot",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis zip --x64",
+    "docs": "node tools/make-docs.js",
+    "release-check": "node tools/release-check.js",
+    "test": "node --test tests/*.test.js",
+    "test:e2e": "python3 tests/e2e_v17.py && python3 tests/e2e_identity.py && python3 tests/e2e_a11y.py && python3 tests/e2e_features.py && python3 tests/e2e_rules.py",
+    "i18n:check": "node tools/i18n-check.js"
+  },
+  "build": {
+    "appId": "com.akrot.penny",
+    "productName": "Penny",
+    "copyright": "Copyright © 2026 Akrot",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "bootstrap.js",
+      "main.js",
+      "store.js",
+      "log.js",
+      "preload.js",
+      "license.js",
+      "updater.js",
+      "license-public.pem",
+      "update-public.pem",
+      "update-config.json",
+      "renderer/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "assets/icon.ico",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Penny"
+    }
+  },
+  "devDependencies": {
+    "electron": "^44.8.0",
+    "electron-builder": "^26.15.3"
+  }
+}

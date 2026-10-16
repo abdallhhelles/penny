@@ -1,0 +1,34 @@
+PENNY PRIVACY NOTICE
+Version 1.1.0 · 2026-10-16
+
+Who is responsible. Akrot publishes Penny. Your financial data never reaches Akrot: it is created and kept on your own device, so you control it. Akrot acts as the data controller only for what you choose to send us, for example a support email.
+  Discord: akrott
+
+What Penny stores, and where. Everything is on your PC, in %APPDATA%\Penny:
+  - penny-data.json: your accounts, transactions, budgets, goals, rules, reminders and settings;
+  - backups\: automatic copies of that file (kept: the latest 14 daily copies, 20 "before a bulk change" copies, 8 "before an upgrade" copies and 30 copies you made yourself);
+  - system.json, window.json: window position and Windows options such as start-up and tray;
+  - license.json: your license key, if you activated one;
+  - logs\: a diagnostic log of up to 2 rotating files of 1 MB. It records technical events, never amounts, payees or notes.
+If you set a passcode, only a salted hash of it is stored. The passcode screen is a privacy screen, not encryption of the data file.
+
+What is sent over the network. Nothing about you or your money. Penny has no accounts, analytics, advertising, crash reporting or cloud sync, and never asks for bank credentials.
+  - Optional update check: if an update address is set, Penny downloads a small version file from it, and a newer signed bundle when you choose to update. The server that hosts it can see your IP address and the request, as any web server can. You can switch this off in Settings.
+  - Setup downloads the open-source Electron runtime once from its public host. That request comes from your PC and carries no Penny data.
+  - Files you import or export are read and written only where you point them.
+
+Why we handle it (legal basis). Because nothing is collected, there is nothing to rely on for the app itself. For support messages, we process what you send in order to answer you (legitimate interests / performing our agreement with you).
+
+How long we keep it.
+  - On your device: until you delete it (see below).
+  - Support emails sent to Akrot: only as long as needed to resolve your request, then deleted, unless the law requires us to keep them longer.
+
+Deleting your data. In Penny: Settings > Data & backups > Erase everything (a safety backup is saved first). To remove it all from your PC: uninstall Penny, choose to delete your data when asked, and delete the folder %APPDATA%\Penny if anything remains. Because we hold no copy, deleting it on your device deletes it everywhere.
+
+Your rights. Because Akrot holds none of your financial data, there is nothing for us to export, correct or erase on your behalf; you can do all of it in the app (Settings > Data & backups). For anything we do hold, such as a support email, you can ask us to access, correct or delete it, object to its use, or complain to your local data-protection authority.
+
+Children. Penny is a general-audience tool and is not directed at children.
+
+Changes. If this notice changes materially, the new version ships with the update and the version number above changes.
+
+Contact. Discord: akrott

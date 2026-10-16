@@ -1,0 +1,104 @@
+'use strict';
+/* Lightweight line-icon set (SF-Symbols-like: round caps, uniform stroke) */
+const ICONS={
+ globe:'<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5S9.4 5.9 12 3.5z"/>',
+ power:'<path d="M12 3.5v8"/><path d="M7 6.6a7.5 7.5 0 1 0 10 0"/>',
+ image:'<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4.5 4 3.5 3-2.5 4 3.5"/>',
+ layers:'<path d="M12 4l8.5 4.5L12 13 3.5 8.5z"/><path d="M3.5 12.5L12 17l8.5-4.5"/><path d="M3.5 16.5L12 21l8.5-4.5"/>',
+ home:'<path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.5V20h5v-5.5h3V20h5V9.5"/>',
+ list:'<path d="M5 3.8h14v16.4l-2.3-1.6-2.4 1.6-2.3-1.6-2.3 1.6-2.4-1.6L5 20.2z"/><path d="M8.5 8.5h7M8.5 12.2h7"/>',
+ card:'<rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="M3 10h18M7 15h3"/>',
+ target:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.8"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
+ star:'<path d="M12 3.6l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 17l-5.2 2.8 1-5.9L3.5 9.8l5.9-.8z"/>',
+ repeat:'<path d="M17 3.5l3 3-3 3"/><path d="M20 6.5H9a5 5 0 0 0-5 5V12"/><path d="M7 20.5l-3-3 3-3"/><path d="M4 17.5h11a5 5 0 0 0 5-5V12"/>',
+ sparkles:'<path d="M10.5 4l1.7 4.8L17 10.5l-4.8 1.7L10.5 17l-1.7-4.8L4 10.5l4.8-1.7z"/><path d="M18 14l.8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8z"/>',
+ sliders:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ search:'<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
+ eye:'<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/>',
+ eyeoff:'<path d="M2.5 12S6 5.5 12 5.5c1.6 0 3 .5 4.3 1.2M21.5 12S18 18.5 12 18.5c-1.6 0-3-.5-4.3-1.2"/><path d="M4 4l16 16"/><path d="M9.9 9.9a2.8 2.8 0 0 0 4.2 3.7"/>',
+ lock:'<rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/>',
+ chevron:'<path d="M9.5 6l6 6-6 6"/>',
+ chevleft:'<path d="M14.5 6l-6 6 6 6"/>',
+ trash:'<path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l.8 12.5h9.4L17.5 7"/>',
+ calendar:'<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+ check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+ x:'<path d="M6 6l12 12M18 6L6 18"/>',
+ down:'<path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 20h14"/>',
+ up:'<path d="M12 16V5M7.5 9L12 4.5 16.5 9M5 20h14"/>',
+ shield:'<path d="M12 3l7.5 3v5.5c0 4.7-3.2 7.8-7.5 9.5-4.3-1.7-7.5-4.8-7.5-9.5V6z"/><path d="M9 12l2.2 2.2L15.5 10"/>',
+ bell:'<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 21h4"/>',
+ palette:'<path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.3 0 2-.8 2-1.8 0-1.2-1-1.6-1-2.7 0-1 .8-1.6 1.8-1.6H17a3.5 3.5 0 0 0 3.5-3.5C20.5 6.7 16.8 3.5 12 3.5z"/><circle cx="8" cy="11" r="1" fill="currentColor"/><circle cx="12" cy="7.5" r="1" fill="currentColor"/><circle cx="16" cy="10" r="1" fill="currentColor"/>',
+ tag:'<path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7a1 1 0 0 1 .7.3l7.3 7.3a1 1 0 0 1 0 1.4l-7.7 7.7a1 1 0 0 1-1.4 0L3.8 12.9a1 1 0 0 1-.3-.7z"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/>',
+ db:'<ellipse cx="12" cy="6" rx="7.5" ry="2.8"/><path d="M4.5 6v6c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V6M4.5 12v6c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8v-6"/>',
+ info:'<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r=".6" fill="currentColor"/>',
+ user:'<circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c.8-3.6 3.8-5.5 7.5-5.5s6.7 1.9 7.5 5.5"/>',
+ coins:'<circle cx="9.5" cy="9.5" r="6"/><path d="M15.5 8.5a6 6 0 1 1-6.9 8.2"/>',
+ bolt:'<path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/>',
+ flag:'<path d="M5.5 21V4M5.5 4.5h12l-2.5 4 2.5 4h-12"/>',
+ clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+ arrowup:'<path d="M12 19V6M6.5 11.5L12 6l5.5 5.5"/>',
+ arrowdown:'<path d="M12 5v13M6.5 12.5L12 18l5.5-5.5"/>',
+ swap:'<path d="M4 8h14M14.5 4.5L18 8l-3.5 3.5M20 16H6M9.5 12.5L6 16l3.5 3.5"/>',
+ wand:'<path d="M5 19L16 8"/><path d="M14.5 6.5l3 3"/><path d="M18 3v2M17 4h2M7 4v2M6 5h2M20 11v2M19 12h2"/>',
+ cart:'<path d="M3.5 4.5h2.2l2 10.2h9.6l1.8-7.4H6.6"/><circle cx="9.5" cy="19" r="1.3"/><circle cx="16.5" cy="19" r="1.3"/>',
+ utensils:'<path d="M7 3.5v7.5M4.5 3.5v5a2.5 2.5 0 0 0 5 0v-5M7 11v9.5"/><path d="M17 20.5V3.5c-2.4 1.4-3.5 4-3.5 7H17"/>',
+ coffee:'<path d="M4.5 9h11v5.5a4.5 4.5 0 0 1-4.5 4.5h-2a4.5 4.5 0 0 1-4.5-4.5z"/><path d="M15.5 10.5h1.8a2.2 2.2 0 0 1 0 4.4h-1.8"/><path d="M8 3.5v2M11.5 3.5v2"/>',
+ car:'<path d="M3.5 17v-4.5l2-5.2a1.5 1.5 0 0 1 1.4-1h10.2a1.5 1.5 0 0 1 1.4 1l2 5.2V17z"/><path d="M3.5 12.5h17M6 17v2.5M18 17v2.5"/><circle cx="7.5" cy="15" r=".6" fill="currentColor"/><circle cx="16.5" cy="15" r=".6" fill="currentColor"/>',
+ fuel:'<path d="M5 20.5V5a1.5 1.5 0 0 1 1.5-1.5h6A1.5 1.5 0 0 1 14 5v15.5M4 20.5h11M5 9.5h9"/><path d="M14 8.5l2.5 1.5a1.5 1.5 0 0 1 .8 1.3V16a1.2 1.2 0 0 0 2.4 0V9l-2.7-2.7"/>',
+ bulb:'<path d="M9 17.5h6M10 20.5h4"/><path d="M12 3.5a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3.5z"/>',
+ phone:'<rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/>',
+ heart:'<path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/>',
+ pill:'<rect x="3.5" y="8.5" width="17" height="7" rx="3.5" transform="rotate(-45 12 12)"/><path d="M9.5 9.5l5 5"/>',
+ bag:'<path d="M5.5 8h13l-1 12h-11z"/><path d="M9 10.5V7a3 3 0 0 1 6 0v3.5"/>',
+ shirt:'<path d="M8.5 3.5L3.5 6.5l2 3.5L8 9v11.5h8V9l2.5 1 2-3.5-5-3c-.6 1.3-1.9 2-3.5 2s-2.9-.7-3.5-2z"/>',
+ film:'<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M8 4.5v15M16 4.5v15M3.5 9H8M3.5 15H8M16 9h4.5M16 15h4.5"/>',
+ gamepad:'<rect x="3" y="7.5" width="18" height="10" rx="5"/><path d="M8 10.5v4M6 12.5h4"/><circle cx="15.5" cy="11.5" r=".7" fill="currentColor"/><circle cx="17.5" cy="13.5" r=".7" fill="currentColor"/>',
+ tv:'<rect x="3.5" y="5" width="17" height="12" rx="2.5"/><path d="M8.5 20.5h7"/>',
+ music:'<path d="M9 17.5V5.5l10-2v12"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/>',
+ plane:'<path d="M20.5 3.5L3.5 10.5l6.5 3 3 6.5z"/><path d="M10 13.5l10.5-10"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6L7 7M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>',
+ cap:'<path d="M2.5 9L12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11.2V16c0 1.4 2.5 2.7 5.5 2.7s5.5-1.3 5.5-2.7v-4.8M21.5 9v5"/>',
+ book:'<path d="M4.5 4.5h10a3 3 0 0 1 3 3v13h-10a3 3 0 0 1-3-3z"/><path d="M4.5 17.5a3 3 0 0 1 3-3h10"/>',
+ gift:'<rect x="3.5" y="9" width="17" height="4" rx="1"/><path d="M5 13v7.5h14V13M12 9v11.5"/><path d="M12 9S9 8.5 8 6.8 9 3.8 10.5 4.6 12 9 12 9zM12 9s3-.5 4-2.2-1-3-2.5-2.2S12 9 12 9z"/>',
+ paw:'<circle cx="7" cy="10" r="1.7"/><circle cx="10.5" cy="6.5" r="1.7"/><circle cx="14.5" cy="6.5" r="1.7"/><circle cx="18" cy="10" r="1.7"/><path d="M12.5 11.5c-3 0-5.5 3-5.5 5.5 0 1.8 1.5 2.5 3 2.2 1-.2 1.5-.5 2.5-.5s1.5.3 2.5.5c1.5.3 3-.4 3-2.2 0-2.5-2.5-5.5-5.5-5.5z"/>',
+ baby:'<circle cx="12" cy="12" r="8.5"/><path d="M9 10.2v.6M15 10.2v.6"/><path d="M9.5 14.5c.6.8 1.5 1.2 2.5 1.2s1.9-.4 2.5-1.2"/>',
+ briefcase:'<rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M3.5 13h17"/>',
+ laptop:'<rect x="5" y="5.5" width="14" height="10" rx="2"/><path d="M3 19h18"/>',
+ trend:'<path d="M3.5 17l5.5-5.5 3.5 3.5 7.5-8"/><path d="M15 7h5.5v5.5"/>',
+ bank:'<path d="M3.5 9.5L12 4l8.5 5.5z"/><path d="M5.5 11.5v6M9.5 11.5v6M14.5 11.5v6M18.5 11.5v6M3.5 20.5h17"/>',
+ wrench:'<path d="M20 7.5l-3.2 3.2-2.5-.5-.5-2.5L17 4.5A5 5 0 0 0 10.5 10.5L3.8 17.2a2 2 0 0 0 3 3L13.5 13.5A5 5 0 0 0 20 7.5z"/>',
+ grid:'<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>',
+ bike:'<circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="M6 16l3.5-7h5L18 16M9.5 9L12 16M8.5 6.5H11M14 9l-1-2.5h2"/>',
+ dumbbell:'<path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>',
+ leaf:'<path d="M5 19C4 10 9 4.5 20 4c.5 10-4.5 16-13 15z"/><path d="M5 19c3-5 6-7.5 10-9"/>',
+ scissors:'<circle cx="6.5" cy="6.5" r="2.5"/><circle cx="6.5" cy="17.5" r="2.5"/><path d="M8.5 8L20 18.5M8.5 16L20 5.5"/>',
+ piggy:'<path d="M19.5 12.5c0-3.3-3.4-6-7.5-6S4.5 9.2 4.5 12.5c0 2 1 3.7 2.5 4.8V20h3v-1.5h4V20h3v-2.7c.9-.7 1.6-1.5 2-2.5h1.5v-3z"/><circle cx="15.5" cy="11.3" r=".7" fill="currentColor"/>',
+ cash:'<rect x="3" y="6.5" width="18" height="11" rx="2.5"/><circle cx="12" cy="12" r="2.6"/><path d="M6.5 12h.01M17.5 12h.01"/>',
+ cake:'<path d="M4.5 20.5h15v-7a2 2 0 0 0-2-2h-11a2 2 0 0 0-2 2z"/><path d="M4.5 16c2 1.5 3.5 1.5 5 0s3-1.5 5 0 3.5 1.5 5 0"/><path d="M12 11.5V8M12 5.2c-.8.8-.8 1.6 0 2.2.8-.6.8-1.4 0-2.2z"/>',
+ keyboard:'<rect x="3" y="6.5" width="18" height="11" rx="2.5"/><path d="M7 10.5h.01M10 10.5h.01M13 10.5h.01M16 10.5h.01M8 14h8"/>',
+ chat:'<path d="M4 5.5h16v11H11l-4.5 3.5v-3.5H4z"/>',
+ lifebuoy:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/><path d="M6 6l3.5 3.5M18 6l-3.5 3.5M6 18l3.5-3.5M18 18l-3.5-3.5"/>',
+ undo:'<path d="M9 6.5L4.5 11 9 15.5"/><path d="M5 11h9a5 5 0 0 1 0 10h-3"/>',
+ help:'<circle cx="12" cy="12" r="8.5"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7"/><circle cx="12" cy="16.8" r=".7" fill="currentColor"/>',
+ window:'<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 9h17"/>',
+ alert:'<path d="M12 4L2.8 19.5h18.4z"/><path d="M12 10v4.5"/><circle cx="12" cy="17" r=".7" fill="currentColor"/>',
+ moon:'<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>',
+ smile:'<circle cx="12" cy="12" r="8.5"/><path d="M8.5 14.2c.9 1.1 2 1.7 3.5 1.7s2.6-.6 3.5-1.7M9 9.8v.4M15 9.8v.4"/>'
+};
+const DIR_ICONS=new Set(['chevron','chevleft']); // icons that point left/right are mirrored in right-to-left languages (see .flip in style.css)
+const icon=(n,s=20,sw=1.9)=>`<svg class="ic${DIR_ICONS.has(n)?' flip':''}" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]||''}</svg>`;
+
+
+/* ---------- Penny brand ---------- */
+const BRAND={name:'Penny',tag:'Every cent, in focus.',version:'1.8.0',publisher:(typeof PUBLISHER!=='undefined'?PUBLISHER.name:'Akrot')};
+/* The mark is defined once in brand/build_brand.py (-> logo-mark.js). Strokes only, so it works at 16 px and in one colour. */
+const LOGO_MARK=(s=22,c='#fff')=>`<svg viewBox="0 0 120 120" width="${s}" height="${s}" fill="none" stroke="${c}" stroke-linecap="round" aria-hidden="true">${LOGO_PATHS}</svg>`;
+const LOGO_SVG=LOGO_MARK;
+
+/* Emoji -> mono icon. Categories, goals, reminders etc. store an emoji character (kept for data compatibility, backups and imports);
+   every screen draws it through gl() so the whole app shows one consistent line-icon style. */
+const EMOJI_ICON={'🛒':'cart','🍽️':'utensils','🍔':'utensils','🍕':'utensils','☕':'coffee','🚗':'car','⛽':'fuel','🏠':'home','💡':'bulb','📱':'phone','❤️‍🩹':'heart','💊':'pill','🛍️':'bag','👕':'shirt','🎬':'film','🎮':'gamepad','📺':'tv','🎵':'music','✈️':'plane','🏖️':'sun','🎓':'cap','📚':'book','🎁':'gift','🐶':'paw','👶':'baby','💼':'briefcase','💻':'laptop','📈':'trend','💰':'coins','🏦':'bank','🧾':'list','🔧':'wrench','🧩':'grid','🎯':'target','🛡️':'shield','🚲':'bike','🏋️':'dumbbell','🥦':'leaf','💈':'scissors','🌱':'leaf','🐖':'piggy','💵':'cash','💳':'card','🏷️':'tag','🗓️':'calendar','🎂':'cake','✅':'check','🔔':'bell','🔁':'repeat','🙂':'smile','❔':'help','⌨️':'keyboard','💬':'chat','👁️':'eye','🪟':'window','🛟':'lifebuoy','🎨':'palette','💾':'db','↩️':'undo','🧠':'sparkles','⭐':'star','💸':'coins','👋':'smile','🎉':'sparkles','⚖️':'sliders','🚨':'alert','⚠️':'alert','⚠':'alert','🕳️':'alert','🕵️':'search','🧘':'leaf','💪':'bolt','🔻':'arrowdown','🏆':'flag','💎':'coins','🤷':'help','✨':'sparkles','🪙':'coins','🔥':'bolt','📅':'calendar','🔒':'lock','🔎':'search','🔍':'search','👯':'repeat','🍩':'target','🌟':'star','🧪':'sliders','🌙':'moon','☀️':'sun','🌤️':'sun'};
+/* the icons offered in the icon pickers: one per distinct glyph, so nothing looks duplicated */
+const PICK_EMOJIS=['🛒','🍽️','☕','🚗','⛽','🏠','💡','📱','❤️‍🩹','💊','🛍️','👕','🎬','🎮','📺','🎵','✈️','🏖️','🎓','📚','🎁','🐶','👶','💼','💻','📈','💰','🏦','🧾','🔧','🧩','🎯','🛡️','🚲','🏋️','🥦','💈'];
+const gl=(e,s=20)=>icon(EMOJI_ICON[(e||'').replace(/️/g,'')]||EMOJI_ICON[e]||'tag',s,1.7);
