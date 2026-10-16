@@ -6,12 +6,14 @@ contextBridge.exposeInMainWorld('native', {
   i18nList: () => inv('i18n:list'), i18nGet: c => inv('i18n:get', c),
   listBackups: () => inv('backups:list'), readBackup: n => inv('backups:read', n),
   material: m => inv('win:material', m), overlay: c => inv('win:overlay', c),
-  exportFile: o => inv('file:export', o), importFile: o => inv('file:import', o),
+  exportFile: o => inv('file:export', o), savePdf: n => inv('file:pdf', n), importFile: o => inv('file:import', o),
   openDataFolder: () => inv('app:openData'), version: () => inv('app:version'), notify: o => inv('app:notify', o),
   platform: process.platform,
   sysGet: () => inv('sys:get'), sysSet: p => inv('sys:set', p), tooltip: t => inv('sys:tooltip', t), badge: n => inv('sys:badge', n),
   ready: () => inv('sys:ready'),
   onEvent: cb => ipcRenderer.on('app:event', (_e, name, arg) => cb(name, arg)),
   updGet: () => inv('upd:get'), updCheck: () => inv('upd:check'), updApply: () => inv('upd:apply'),
+  vaultStatus: () => inv('vault:status'), vaultUnlock: p => inv('vault:unlock', p), vaultRecover: c => inv('vault:recover', c), vaultVerify: p => inv('vault:verify', p),
+  vaultSetPasscode: p => inv('vault:setPasscode', p), vaultClearPasscode: () => inv('vault:clearPasscode'), vaultNewRecovery: () => inv('vault:newRecovery'), vaultSetAside: () => inv('vault:setAside'),
   licenseGet: () => inv('license:get'), licenseActivate: k => inv('license:activate', k), licenseRemove: () => inv('license:remove')
 });

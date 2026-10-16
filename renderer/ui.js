@@ -383,17 +383,4 @@ async function hashPin(pin,salt){
   if(window.crypto?.subtle){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
   let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return String(h>>>0);
 }
-function showLock(){
-  if(!S.settings.pin)return;let pin='',busy=false;const L=$('#lock');L.classList.add('on');
-  L.innerHTML=`<div class="lockbox"><div class="logo" style="margin:0 auto;width:56px;height:56px;border-radius:17px">${LOGO_SVG(32)}</div><h2>Penny is locked</h2><p>Enter your passcode</p><div class="pin-dots" id="pd"></div><div class="keypad">${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k=>k===''?'<span></span>':`<button class="${k==='⌫'?'ghost':''}" data-k="${k}" aria-label="${k==='⌫'?'Delete':k}">${k}</button>`).join('')}</div></div>`;
-  const dots=()=>{$('#pd',L).innerHTML=Array.from({length:Math.max(4,pin.length)},(_,i)=>`<i class="${i<pin.length?'f':''}"></i>`).join('');};dots();
-  const press=async k=>{if(busy)return;if(k==='⌫')pin=pin.slice(0,-1);else if(pin.length<8)pin+=k;dots();
-    if(pin.length>=4&&await hashPin(pin,S.settings.salt)===S.settings.pin){L.classList.remove('on');document.removeEventListener('keydown',kd);return;}
-    if(pin.length>=6&&k!=='⌫'){busy=true;$('.lockbox',L).animate([{transform:'translateX(-14px)'},{transform:'translateX(14px)'},{transform:'translateX(-9px)'},{transform:'none'}],{duration:340});setTimeout(()=>{pin='';busy=false;dots();},340);}};
-  $$('button',L).forEach(b=>b.onclick=()=>press(b.dataset.k));
-  const kd=e=>{if(/^\d$/.test(e.key))press(e.key);else if(e.key==='Backspace')press('⌫');};document.addEventListener('keydown',kd);
-}
-function openPinSetup(){
-  openSheet({title:'Set Passcode',ok:'Save',body:`<p class="muted" style="text-align:center;margin-bottom:6px">Choose 4–8 digits. Penny asks for it on launch and when you press Ctrl+L.</p><div class="amount-wrap"><input id="p" type="password" inputmode="numeric" maxlength="8" class="amount-in" placeholder="••••"></div>`,
-   onOk:async s=>{const p=$('#p',s).value;if(!/^\d{4,8}$/.test(p)){toast('Use 4–8 digits');return;}S.settings.salt=uid();S.settings.pin=await hashPin(p,S.settings.salt);closeModal();changed();toast('Passcode enabled');}});
-}
+/* showLock, openPinSetup: see vault-ui.js */

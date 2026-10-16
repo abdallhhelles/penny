@@ -3,11 +3,16 @@
 const NAV=[['dashboard','home','nav.dashboard','#0A7F66'],['transactions','list','nav.transactions','#30D158'],['accounts','card','nav.accounts','#BF5AF2'],['budgets','target','nav.budgets','#FF9F0A'],['goals','star','nav.goals','#FF375F'],['reminders','bell','nav.reminders','#FF453A'],['bills','repeat','nav.bills','#32ADE6'],['calendar','calendar','nav.calendar','#FF453A'],['insights','sparkles','nav.insights','#5E5CE6'],['report','shield','nav.report','#0A7F66'],['plan','bolt','nav.plan','#FFD60A'],['settings','sliders','nav.settings','#8E8E93']];
 let cur='dashboard';
 let UPD={status:'idle'},_updToast='';
-function updLabel(u){const v=u.available||'';return{idle:tr('upd.idle'),checking:tr('upd.checking'),uptodate:tr('upd.uptodate'),downloading:tr('upd.downloading',{version:v}),ready:tr('upd.ready',{version:v}),error:u.error||tr('upd.error'),unconfigured:tr('upd.unconfigured'),"needs-installer":tr('upd.needsInstaller',{version:v})}[u.status]||''}
+function updLabel(u){const v=u.available||'';return{idle:tr('upd.idle'),checking:tr('upd.checking'),uptodate:tr('upd.uptodate'),downloading:tr('upd.downloading',{version:v}),verifying:tr('updx.verifying'),ready:tr('upd.ready',{version:v}),error:u.error||tr('upd.error'),offline:tr('updx.offline'),unconfigured:tr('upd.unconfigured'),"needs-installer":tr('upd.needsInstaller',{version:v})}[u.status]||''}
 function onUpdate(u){
-  UPD=u;const b=$('#updbtn');if(b){b.style.display=u.status==='ready'?'':'none';b.textContent=tr('upd.restart');}
-  if(u.status==='ready'&&_updToast!==u.available){_updToast=u.available;toast(tr('upd.readyToast',{version:u.available}),{action:tr('upd.restartAction'),fn:applyUpdate,ms:12000});}
-  if(cur==='settings'&&$('#upd_stat')){$('#upd_stat').textContent=updLabel(u);const r=$('#upd_apply');if(r)r.style.display=u.status==='ready'?'':'none';}
+  UPD=u||{status:'idle'};renderUpdPill();refreshUpdSheet();
+  const st=$('#upd_stat');if(st&&cur==='settings'){const c=st.closest('.upd-card');if(c){c.outerHTML=updCardHtml();wireUpdCard();}}
+  if(u.status==='ready'&&_updToast!==u.available){_updToast=u.available;if(!$('#modal .upd-sheet'))toast(tr('upd.readyToast',{version:u.available}),{action:tr('updx.see'),fn:openUpdateSheet,ms:12000});}
+}
+function wireUpdCard(){
+  const c=$('#upd_check'),o=$('#upd_open');
+  if(c)c.onclick=async()=>{onUpdate({...UPD,status:'checking'});const u=await native.updCheck();onUpdate(u);if(u.status==='uptodate')toast(tr('upd.uptodate'));};
+  if(o)o.onclick=()=>UPD.status==='ready'?applyUpdate():openUpdateSheet();
 }
 async function applyUpdate(){saveNow();native.updApply();}
 
@@ -36,10 +41,10 @@ function updateBadge(){const n=$('[data-nav=bills] .badge');const c=S?dueSoon(3)
 const syncNative=debounce(c=>{if(!hasNative||!S)return;try{const sp=safeToSpend(),left=sp.perDay-sp.spentToday;native.tooltip(S.settings.privacy?tr('tray.tooltipHidden'):tr('tray.tooltipSafe',{amount:money(Math.max(0,left))}));native.badge(c);}catch{}},600);
 function buildShell(){
   $('#side').innerHTML=`<div class="brand"><div class="logo">${LOGO_SVG(23)}</div><div><b>Penny</b><small>${trh('shell.tagline')}</small></div></div>${NAV.map(([k,i,l,c],n)=>`<div class="nav" data-nav="${k}" role="button" tabindex="0" title="${trh(l)}${n<9?' (Alt+'+(n+1)+')':n===NAV.length-1?' (Alt+0)':''}"><span class="sq" style="--c:${c}">${icon(i,17,2)}</span><span>${trh(l)}</span>${k==='bills'?'<span class="badge" style="display:none"></span>':''}${k==='plan'&&MONETIZATION.enabled&&!isPro()?'<span class="protag">PRO</span>':''}</div>`).join('')}<div class="spacer"></div><div class="side-foot" id="sf" data-go="settings"></div>`;
-  $('#top').innerHTML=`<div class="inline-title" id="ttl"></div><div class="search" id="srch" role="button" tabindex="0">${icon('search',16)}<span>${trh('shell.search')}</span><kbd>Ctrl K</kbd></div><button class="icon-btn" id="privbtn" title="${trh('shell.privacyTitle')}" aria-label="${trh('shell.privacyAria')}"></button><button class="btn sm pri" id="updbtn" style="display:none"></button><button class="btn pri" data-act="add">${icon('plus',17,2.4)}${trh('shell.new')}</button>`;
+  $('#top').innerHTML=`<div class="inline-title" id="ttl"></div><div class="search" id="srch" role="button" tabindex="0">${icon('search',16)}<span>${trh('shell.search')}</span><kbd>Ctrl K</kbd></div><button class="icon-btn" id="privbtn" title="${trh('shell.privacyTitle')}" aria-label="${trh('shell.privacyAria')}"></button><button class="upd-pill" id="updbtn" style="display:none"></button><button class="btn pri" data-act="add">${icon('plus',17,2.4)}${trh('shell.new')}</button>`;
   $('#side').onclick=e=>{const n=e.target.closest('[data-nav]');if(n)go(n.dataset.nav);else if(e.target.closest('[data-go]'))go('settings');};
   $('#side').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){const n=e.target.closest('[data-nav]');if(n){e.preventDefault();go(n.dataset.nav);}}};
-  $('#srch').onclick=()=>openCmd();$('#privbtn').onclick=togglePriv;$('#updbtn').onclick=applyUpdate;if(hasNative&&native.updGet)native.updGet().then(onUpdate).catch(()=>{});
+  $('#srch').onclick=()=>openCmd();$('#privbtn').onclick=togglePriv;$('#updbtn').onclick=openUpdateSheet;if(hasNative&&native.updGet)native.updGet().then(onUpdate).catch(()=>{});
   $('#top').onclick=e=>{const a=e.target.closest('[data-act]');if(a)act(a.dataset.act);};
   $('#view').onscroll=e=>$('#top').classList.toggle('scrolled',e.target.scrollTop>46);
   updateSideFoot();updatePrivBtn();
@@ -94,7 +99,7 @@ function openCmd(prefill=''){
     {i:icon('plus',15,2.4),c:'#0A7F66',t:tr('cmd.newTx'),h:'N',g:tr('cmd.groupActions'),run:()=>openTx()},{i:icon('card',15),c:'#BF5AF2',t:tr('cmd.newAccount'),g:tr('cmd.groupActions'),run:()=>openAcc()},{i:icon('star',15),c:'#FF375F',t:tr('cmd.newGoal'),g:tr('cmd.groupActions'),run:()=>openGoal()},{i:icon('repeat',15),c:'#32ADE6',t:tr('cmd.newRecurring'),g:tr('cmd.groupActions'),run:()=>openBill()},{i:icon('tag',15),c:'#FF9F0A',t:tr('cmd.newCategory'),g:tr('cmd.groupActions'),run:()=>openCat()},
     {i:icon('plus',15,2.4),c:'#30D158',t:tr('cmd.addIncome'),g:tr('cmd.groupActions'),run:()=>openTx(null,{type:'income'})},
     {i:icon('bell',15),c:'#FF453A',t:tr('cmd.newReminder'),g:tr('cmd.groupActions'),run:()=>openReminder()},
-    {i:icon('info',15),c:'#0A7F66',t:tr('cmd.showGuide'),g:tr('cmd.groupActions'),run:()=>openGuide()},
+    {i:icon('sparkles',15),c:'#0A7F66',t:tr('tour.row'),g:tr('cmd.groupActions'),run:()=>startTour()},{i:icon('info',15),c:'#0A7F66',t:tr('cmd.showGuide'),g:tr('cmd.groupActions'),run:()=>openGuide()},
     {i:icon('star',15),c:'#D98A4E',t:tr('cmd.pro'),g:tr('cmd.groupActions'),run:()=>openUpgrade()},
     {i:icon('eyeoff',15),c:'#5E5CE6',t:tr('cmd.togglePrivacy'),h:'P',g:tr('cmd.groupActions'),run:togglePriv},
     {i:icon('palette',15),c:'#5E5CE6',t:tr('cmd.switchTheme'),g:tr('cmd.groupActions'),run:()=>{S.settings.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';applySettings();save();if(cur==='settings')refresh();}},
@@ -148,7 +153,7 @@ function onboarding(){
     <div class="fg"><div class="fr"><label>${trh('onb.language')}</label><select id="wl">${langOptions(readLangPref())}</select></div><div class="fr"><label>${trh('onb.name')}</label><input id="wn" placeholder="${trh('common.optional')}"></div><div class="fr"><label>${trh('onb.currency')}</label><select id="wc">${CURRENCIES.map(c=>opt(c,c,c===guess)).join('')}</select></div></div>
     <div style="display:grid;gap:10px;margin-top:22px"><button class="btn pri" id="wf" style="height:50px;font-size:17px">${trh('onb.start')}</button><button class="btn" id="wd" style="height:46px">${trh('onb.demo')}</button></div></div></div>`,s=>{
     $('#modal').onmousedown=null;
-    const go_=async demo=>{const name=$('#wn',s).value.trim();const d=demo?demoData(name):freshData(name);d.settings.currency=$('#wc',s).value;d.settings.locale=lg;closeModal();await replaceData(d);setTimeout(()=>openGuide(),500);};
+    const go_=async demo=>{const name=$('#wn',s).value.trim();const d=demo?demoData(name):freshData(name);d.settings.currency=$('#wc',s).value;d.settings.locale=lg;closeModal();await replaceData(d);setTimeout(()=>startTour(),600);};
     $('#wf',s).onclick=()=>go_(false);$('#wd',s).onclick=()=>go_(true);
     $('#wl',s).onchange=async e=>{await setAppLanguage(e.target.value,{reopen:true});};
     $('#wn',s).focus();$('#wn',s).onkeydown=e=>{if(e.key==='Enter')go_(false);};
@@ -198,8 +203,12 @@ function checkReminders(){
   await initI18n();   // language first: every screen below (even error screens) is translated
   await loadLicense();
   hookNative();
-  let d;
-  try{d=await loadData();}catch(e){
+  await vaultRefresh();
+  let d,unlockedBy=null;
+  try{
+    d=await loadData();
+    if(d&&d.__locked){const u=await vaultUnlockScreen(d.vault);unlockedBy=u.how;d=u.data?await prepData(u.data):null;}
+  }catch(e){
     logErr('could not open data',e);
     try{S=freshData('');setupFmt();applySettings();}catch{} // only so the screen can render; S is cleared below so nothing can be saved
     openModal(`<div class="alert" data-noclose><h3>${trh('err.openTitle')}</h3><p>${trh('err.openBody')}</p><div class="bt">${hasNative?`<button id="of">${trh('err.openFolder')}</button>`:''}<button id="ok">${trh('common.close')}</button></div></div>`,s=>{$('#modal').onmousedown=null;const o=$('#of',s);if(o)o.onclick=()=>native.openDataFolder();$('#ok',s).onclick=()=>window.close();});
@@ -218,7 +227,9 @@ function checkReminders(){
   if(!d){S=freshData('');setupFmt();applySettings();buildShell();go('dashboard');onboarding();return;}
   S=d;setupFmt();buildShell();applySettings();
   const n=runBills();if(n)saveNow();
-  go('dashboard');showLock();
+  go('dashboard');
+  if(unlockedBy==='recovery'){S.settings.pin=null;saveNow();setTimeout(()=>{toast(tr('lock.recovered'),{ms:7000});openPinSetup();},700);}
+  else if(!unlockedBy)showLock();
   if(d.__rec)setTimeout(()=>toast(tr('err.recovered',{name:d.__rec.replace('penny-','').replace('.json','')}),{ms:6500}),500);
   else if(n)setTimeout(()=>toast(tr('bills.posted',{count:n})),600);
   armIdle();setTimeout(()=>{checkReminders();tickReminders();},2500);setInterval(()=>tickReminders(),30000);setInterval(()=>{if(S){const n=runBills();if(n){saveNow();refresh();}}checkReminders();},10*60*1000);

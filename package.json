@@ -1,7 +1,7 @@
 {
   "name": "penny",
   "productName": "Penny",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "Penny — every cent, in focus. Private personal finance for Windows.",
   "main": "bootstrap.js",
   "author": "Akrot",
@@ -12,7 +12,7 @@
     "docs": "node tools/make-docs.js",
     "release-check": "node tools/release-check.js",
     "test": "node --test tests/*.test.js",
-    "test:e2e": "python3 tests/e2e_v17.py && python3 tests/e2e_identity.py && python3 tests/e2e_a11y.py && python3 tests/e2e_features.py && python3 tests/e2e_rules.py",
+    "test:e2e": "python3 tests/e2e_v17.py && python3 tests/e2e_identity.py && python3 tests/e2e_a11y.py && python3 tests/e2e_features.py && python3 tests/e2e_rules.py && python3 tests/e2e_v18.py && python3 tests/e2e_vault.py && python3 tests/e2e_v19.py",
     "i18n:check": "node tools/i18n-check.js"
   },
   "build": {
@@ -55,5 +55,6 @@
   "devDependencies": {
     "electron": "^44.8.0",
     "electron-builder": "^26.15.3"
-  }
+  },
+  "homepage": "https://github.com/abdallhhelles/penny"
 }

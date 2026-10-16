@@ -389,7 +389,9 @@ PAGES.settings={title:'Settings',
   </div>`);
 
   const security=setGroup(H('set.cat.security'),`<div class="group">
-   ${srow('lock','var(--indigo)',H('set.pin'),H(s.pin?'set.pinOn':'set.pinOff'),s.pin?`<button class="btn sm" id="pin_off">${H('set.remove')}</button>`:`<button class="btn sm pri" id="pin_on">${H('set.pinSet')}</button>`)}
+   ${srow('shield',VAULT.encrypted||!hasNative?'var(--green)':'var(--orange)',H('enc.title'),esc(vaultStatusText()),`<span class="enc-pill ${VAULT.encrypted?'on':''}">${icon(VAULT.encrypted?'lock':'info',13)} ${H(VAULT.encrypted?'enc.on':'enc.offShort')}</span>`)}
+   ${srow('lock','var(--indigo)',H('set.pin'),H(s.pin?'set.pinOn':'set.pinOff'),s.pin?`<div class="btns-inline"><button class="btn sm" id="pin_chg">${H('pin.change')}</button><button class="btn sm" id="pin_off">${H('set.remove')}</button></div>`:`<button class="btn sm pri" id="pin_on">${H('set.pinSet')}</button>`)}
+   ${s.pin&&VAULT.mode==='passcode'?srow('key','var(--yellow)',H('rk.row'),H('rk.rowD'),`<button class="btn sm" id="rec_new">${H('rk.newOk')}</button>`):''}
    ${srow('clock','var(--purple)',H('set.autoLock'),H(s.pin?'set.autoLockD':'set.autoLockNeedsPin'),`<select id="st_al" ${s.pin?'':'disabled'}>${[0,1,5,15,30].map(k=>opt(k,tr('set.autoLock.'+k),s.autoLock===k)).join('')}</select>`)}
    ${srow('lock','var(--gray,#8E8E93)',H('set.lockMin'),H('set.lockMinD'),toggle('st_lm',s.lockOnMinimize))}
    ${srow('eyeoff','var(--teal)',H('set.blurLeave'),H('set.blurLeaveD'),toggle('st_bl',s.blurOnLeave))}
@@ -424,13 +426,13 @@ PAGES.settings={title:'Settings',
 
   const rules=setGroup(H('rules.title'),rulesSettingsHtml(),H('rules.footer'));
   const about=(hasNative&&native.updGet?setGroup(H('set.updates'),`<div class="group">
-   ${srow('down','var(--green)','Penny '+BRAND.version,`<span id="upd_stat">${esc(updLabel(UPD))}</span>`,`<button class="btn sm" id="upd_check">${H('set.checkNow')}</button><button class="btn sm pri" id="upd_apply" style="${UPD.status==='ready'?'':'display:none'}">${H('upd.restart')}</button>`)}
-   ${UPD.notes&&UPD.status==='ready'?`<div class="setrow plain"><div class="grow"><b>${H('set.whatsNew',{version:UPD.available})}</b><small>${esc(UPD.notes)}</small></div></div>`:''}
+   ${updCardHtml()}
    ${srow('bolt','var(--blue)',H('set.autoUpdate'),H('set.autoUpdateD'),toggle('upd_auto',SYS.autoUpdate!==false))}
    ${srow('globe','var(--gray,#8E8E93)',H('set.feed'),H('set.feedD'),`<input type="text" id="upd_feed" value="${esc(SYS.updateFeed||'')}" placeholder="${esc(UPD.feed||'https://…/latest.json')}" style="max-width:300px" dir="ltr">`)}
   </div>`,H('set.updatesF')):'')
   +setGroup(H('set.help'),`<div class="group">
-   ${srow('info','var(--blue)',H('set.guide'),H('set.guideD'),`<button class="btn sm pri" id="h_tour">${H('set.tour')}</button>`)}
+   ${srow('sparkles','var(--accent)',H('tour.row'),H('tour.rowD'),`<button class="btn sm pri" id="h_tour">${H('set.tour')}</button>`)}
+   ${srow('info','var(--blue)',H('set.guide'),H('set.guideD'),`<button class="btn sm" id="h_guide">${H('tour.open')}</button>`)}
    ${srow('sparkles','var(--yellow)',H('set.tips'),H('set.tipsD'),toggle('st_tips',!s.tipsOff))}
   </div>`)
   +setGroup(H('set.about'),aboutGroup());
@@ -495,12 +497,11 @@ PAGES.settings={title:'Settings',
   $('#st_rlead',v).onchange=e=>set('remLead',+e.target.value);$('#st_qon',v).onchange=e=>{set('quietOn',e.target.checked);changed();};
   const qf=$('#st_qf',v);if(qf){qf.onchange=e=>set('quietFrom',e.target.value);$('#st_qt',v).onchange=e=>set('quietTo',e.target.value);}
   if($('#upd_check',v)){
-    $('#upd_check',v).onclick=async()=>{$('#upd_stat',v).textContent=tr('upd.checking');const u=await native.updCheck();onUpdate(u);};
-    $('#upd_apply',v).onclick=applyUpdate;
+    wireUpdCard();
     $('#upd_auto',v).onchange=e=>{SYS.autoUpdate=e.target.checked;native.sysSet({autoUpdate:e.target.checked});};
     $('#upd_feed',v).onchange=async e=>{SYS.updateFeed=e.target.value.trim();await native.sysSet({updateFeed:SYS.updateFeed});const u=await native.updGet();onUpdate(u);toast(tr(SYS.updateFeed?'set.feedSaved':'set.feedDefault'));};
   }
-  wireAbout(v);$('#h_tour',v).onclick=()=>openGuide();$('#st_tips',v).onchange=e=>set('tipsOff',!e.target.checked);
+  wireAbout(v);$('#h_tour',v).onclick=()=>startTour();$('#h_guide',v).onclick=()=>openGuide();$('#st_tips',v).onchange=e=>set('tipsOff',!e.target.checked);
   /* language & regional formats: only DISPLAY changes; stored amounts and dates are never rewritten */
   const refreshPreview=()=>{const p=$('#set_preview',v);if(p)p.textContent=setPreview();};
   $('#st_lang',v).onchange=async e=>{await setAppLanguage(e.target.value);};
@@ -512,7 +513,7 @@ PAGES.settings={title:'Settings',
   $('#st_notify',v).onchange=e=>set('notify',e.target.checked);
   $$('[data-wm]',v).forEach(b=>b.onclick=()=>{const i=+b.dataset.wm,j=i+ +b.dataset.d,w=S_.widgets;[w[i],w[j]]=[w[j],w[i]];changed();});
   $$('[data-wv]',v).forEach(c=>c.onchange=()=>{S_.widgets[+c.dataset.wv].on=c.checked;save();});
-  const po=$('#pin_on',v);if(po)po.onclick=openPinSetup;const pf=$('#pin_off',v);if(pf)pf.onclick=()=>{S_.pin=null;changed();toast(tr('set.pinRemoved'));};
+  const po=$('#pin_on',v);if(po)po.onclick=openPinSetup;const pf=$('#pin_off',v);if(pf)pf.onclick=removePasscode;const pc=$('#pin_chg',v);if(pc)pc.onclick=openPinSetup;const rk=$('#rec_new',v);if(rk)rk.onclick=newRecoveryKey;
   $('#d_exp',v).onclick=openExportSheet;$('#d_imp',v).onclick=startImport;
   $('#pro_btn',v).onclick=()=>openUpgrade();
   $('#st_bg',v).onchange=e=>{const b=BACKGROUNDS.find(x=>x[0]===e.target.value);if(b&&b[2]&&!can('backgrounds')){e.target.value=S_.bg;openUpgrade('backgrounds');return;}set('bg',e.target.value);};

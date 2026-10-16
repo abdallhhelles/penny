@@ -84,14 +84,19 @@ const ICONS={
  window:'<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 9h17"/>',
  alert:'<path d="M12 4L2.8 19.5h18.4z"/><path d="M12 10v4.5"/><circle cx="12" cy="17" r=".7" fill="currentColor"/>',
  moon:'<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>',
- smile:'<circle cx="12" cy="12" r="8.5"/><path d="M8.5 14.2c.9 1.1 2 1.7 3.5 1.7s2.6-.6 3.5-1.7M9 9.8v.4M15 9.8v.4"/>'
+ smile:'<circle cx="12" cy="12" r="8.5"/><path d="M8.5 14.2c.9 1.1 2 1.7 3.5 1.7s2.6-.6 3.5-1.7M9 9.8v.4M15 9.8v.4"/>',
+ copy:'<rect x="8.5" y="8.5" width="11" height="11" rx="2.5"/><path d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/>',
+ download:'<path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14"/>',
+ key:'<circle cx="8" cy="15" r="4"/><path d="M10.9 12.1L19 4M16 7l2.5 2.5M14 9l2 2"/>',
+ refresh:'<path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4"/>',
+ rocket:'<path d="M12 15l-3-3c1.4-4.6 4.7-7.7 10-8.5-.8 5.3-3.9 8.6-8.5 10"/><path d="M9 12l-3.5.5L4 15l4 1M12 15l-.5 3.5L9 20l-1-4M14.8 9.2h.01"/>'
 };
 const DIR_ICONS=new Set(['chevron','chevleft']); // icons that point left/right are mirrored in right-to-left languages (see .flip in style.css)
 const icon=(n,s=20,sw=1.9)=>`<svg class="ic${DIR_ICONS.has(n)?' flip':''}" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]||''}</svg>`;
 
 
 /* ---------- Penny brand ---------- */
-const BRAND={name:'Penny',tag:'Every cent, in focus.',version:'1.8.0',publisher:(typeof PUBLISHER!=='undefined'?PUBLISHER.name:'Akrot')};
+const BRAND={name:'Penny',tag:'Every cent, in focus.',version:'1.9.0',publisher:(typeof PUBLISHER!=='undefined'?PUBLISHER.name:'Akrot')};
 /* The mark is defined once in brand/build_brand.py (-> logo-mark.js). Strokes only, so it works at 16 px and in one colour. */
 const LOGO_MARK=(s=22,c='#fff')=>`<svg viewBox="0 0 120 120" width="${s}" height="${s}" fill="none" stroke="${c}" stroke-linecap="round" aria-hidden="true">${LOGO_PATHS}</svg>`;
 const LOGO_SVG=LOGO_MARK;

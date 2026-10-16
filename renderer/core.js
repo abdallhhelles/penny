@@ -85,6 +85,11 @@ async function loadData(){
   let d=null;
   try{ d=hasNative?await native.load():JSON.parse(localStorage.getItem('penny')||localStorage.getItem('lumivault')||'null'); }catch(e){logErr('load failed',e);}
   if(!d) return null;
+  if(d.__locked)return d;   // encrypted: the unlock screen gets the data (vault-ui.js), then prepData()
+  return prepData(d);
+}
+async function prepData(d){
+  if(!d) return null;
   if(d.__damaged)return{__damaged:true};
   if((d.schema||0)>SCHEMA)return{__newer:true,schema:d.schema};
   const rec=d.__recovered;

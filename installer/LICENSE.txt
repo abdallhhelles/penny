@@ -25,3 +25,5 @@ This agreement is between you and Akrot ("Akrot", "we"), the publisher of Penny 
 
 Publisher: Akrot
 Discord: akrott
+Support: https://github.com/abdallhhelles/penny/issues
+Website: https://github.com/abdallhhelles/penny

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Builds a signed update from the current source tree.
-//   node tools/publish-update.js [outDir] [--notes "What's new"] [--feed https://host/path/latest.json]
+//   node tools/publish-update.js [outDir] [--notes "What's new" | --notes-file docs/RELEASE-x.y.z.md] [--shell N --installer-url https://…]
 // Output: <outDir>/penny-app-<version>.pkg  +  <outDir>/latest.json   → upload BOTH to your host (e.g. a GitHub Release).
 // Bump "version" in package.json first. Users' installed Penny finds and applies it automatically.
 const fs = require('fs'), path = require('path'), zlib = require('zlib'), crypto = require('crypto');
@@ -8,7 +8,9 @@ const root = path.join(__dirname, '..');
 const args = process.argv.slice(2);
 const get = f => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : ''; };
 const out = path.resolve(args.find((a, i) => !a.startsWith('--') && !(i > 0 && args[i - 1].startsWith('--'))) || path.join(root, 'release'));
-const notes = get('--notes');
+const notesFile = get('--notes-file');
+const notes = notesFile ? fs.readFileSync(notesFile, 'utf8').replace(/^#[^\n]*\n+/, '').trim().slice(0, 4000) : get('--notes');
+const installerUrl = get('--installer-url');   // full installer, used when --shell is bumped (new Electron runtime)
 const shell = +get('--shell') || 1;
 const version = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;
 const files = {};
@@ -21,5 +23,5 @@ const sig = crypto.sign(null, Buffer.from(`penny-app\n${version}\n${sha}`), fs.r
 fs.mkdirSync(out, { recursive: true });
 const name = `penny-app-${version}.pkg`;
 fs.writeFileSync(path.join(out, name), pkg);
-fs.writeFileSync(path.join(out, 'latest.json'), JSON.stringify({ version, url: name, sha256: sha, sig, size: pkg.length, shell, notes, date: new Date().toISOString() }, null, 2));
+fs.writeFileSync(path.join(out, 'latest.json'), JSON.stringify({ version, url: name, sha256: sha, sig, size: pkg.length, shell, notes, ...(installerUrl ? { installerUrl } : {}), date: new Date().toISOString() }, null, 2));
 console.log(`Penny ${version}: ${name} (${(pkg.length / 1024).toFixed(0)} KB) + latest.json → ${out}`);

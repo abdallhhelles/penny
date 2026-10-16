@@ -44,7 +44,7 @@ def finish_onboarding(pg):
     pg.wait_for_selector('#wf', timeout=10000); pg.click('#wf'); pg.wait_for_function('()=>typeof S!=="undefined"&&!!S&&!!S.accounts', timeout=10000)
     for _ in range(3):   # the welcome tour opens ~0.5 s after setup; close it whenever it shows
         pg.wait_for_timeout(800)
-        pg.evaluate('()=>{if(document.querySelector("#modal.on"))closeModal()}')
+        pg.evaluate('()=>{if(document.querySelector("#modal.on"))closeModal();if(typeof tourEnd==="function")tourEnd(true)}')
 
 def mev(expr):
     r = subprocess.run(['node', os.path.join(ROOT, 'tests', 'main_eval.js'), str(INSPECT), expr], capture_output=True, text=True, timeout=20)

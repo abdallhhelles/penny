@@ -1,0 +1,69 @@
+# Publishes a signed Penny update to GitHub Releases when you push a version tag (e.g. v1.9.0).
+# Installed copies of Penny check https://github.com/<owner>/<repo>/releases/latest/download/latest.json every 6 hours,
+# verify the SHA-256 + Ed25519 signature, and offer "Restart to update".
+#
+# One-time setup:  repository Settings > Secrets and variables > Actions > New repository secret
+#   Name: UPDATE_PRIVATE_KEY   Value: the full contents of tools/update-private-key.pem (BEGIN ... END lines included)
+# Each release:     bump "version" in package.json and BRAND in renderer/icons.js, write docs/RELEASE-<version>.md, then
+#   git tag v1.9.0 && git push origin v1.9.0
+name: Release
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install (no Electron download needed)
+        run: npm ci --ignore-scripts
+      - name: Unit tests
+        run: npm test
+      - name: Translation check
+        run: node tools/i18n-check.js
+      - name: Release gate
+        run: node tools/release-check.js --allow-missing-contact
+      - name: Version
+        id: v
+        run: |
+          VER=$(node -p "require('./package.json').version")
+          echo "ver=$VER" >> "$GITHUB_OUTPUT"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "v$VER" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match package.json version $VER"; exit 1
+          fi
+      - name: Build and sign the update
+        env:
+          KEY: ${{ secrets.UPDATE_PRIVATE_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then echo "::error::Add the UPDATE_PRIVATE_KEY repository secret (see the top of this file)"; exit 1; fi
+          umask 077
+          printf '%s\n' "$KEY" > tools/update-private-key.pem
+          NOTES="docs/RELEASE-${{ steps.v.outputs.ver }}.md"
+          if [ -f "$NOTES" ]; then node tools/publish-update.js out --notes-file "$NOTES"
+          else node tools/publish-update.js out --notes "Penny ${{ steps.v.outputs.ver }}"; fi
+      - name: Remove the signing key
+        if: always()
+        run: rm -f tools/update-private-key.pem
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VER=${{ steps.v.outputs.ver }}
+          NOTES="docs/RELEASE-$VER.md"
+          ARGS=(--title "Penny $VER" --latest)
+          if [ -f "$NOTES" ]; then ARGS+=(--notes-file "$NOTES"); else ARGS+=(--notes "Penny $VER"); fi
+          if gh release view "v$VER" >/dev/null 2>&1; then
+            gh release upload "v$VER" "out/penny-app-$VER.pkg" "out/latest.json" --clobber
+          else
+            gh release create "v$VER" "out/penny-app-$VER.pkg" "out/latest.json" "${ARGS[@]}"
+          fi
+          echo "Installed copies will find it at https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/latest.json"

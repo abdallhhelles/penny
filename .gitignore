@@ -1,0 +1,13 @@
+node_modules/
+dist/
+dist-exe/
+release/
+out/
+__pycache__/
+*.pyc
+# signing keys must never be committed (the repo is public)
+tools/update-private-key.pem
+tools/private-key.pem
+*-private-key.pem
+*.key
+.env

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, shell, screen, Notification, Tray, Menu, nativeImage, globalShortcut, nativeTheme } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, screen, Notification, Tray, Menu, nativeImage, globalShortcut, nativeTheme, safeStorage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { verifyKey } = require('./license');
@@ -23,10 +23,37 @@ const launchedHidden = process.argv.includes('--hidden');
 
 /* ---------- logging + data (see log.js / store.js) ---------- */
 const { createLogger } = require('./log');
-const { createStore } = require('./store');
+const { createStore, createVault } = require('./store');
 const log = createLogger(app.getPath('userData'));
-const store = createStore(app.getPath('userData'), log);
-const readData = () => store.load();
+/* Windows DPAPI through Electron safeStorage. On Linux without a keyring Electron falls back to a fixed key ("basic_text"),
+   which protects nothing, so it is treated as unavailable there (data then stays plain unless a passcode is set). */
+const device = {
+  available() {
+    if (!app.isReady()) return false;
+    try {
+      if (!safeStorage.isEncryptionAvailable()) return false;
+      if (process.platform === 'linux' && typeof safeStorage.getSelectedStorageBackend === 'function' && safeStorage.getSelectedStorageBackend() === 'basic_text') return false;
+      return true;
+    } catch { return false; }
+  },
+  encrypt: b => safeStorage.encryptString(b.toString('latin1')),
+  decrypt: b => Buffer.from(safeStorage.decryptString(b), 'latin1')
+};
+const vault = createVault({ device, log });
+const store = createStore(app.getPath('userData'), log, vault);
+/* newest file the vault can read keys from: an encrypted file, or valid plain JSON */
+const usableRaw = t => { if (vault.peek(t)) return true; try { JSON.parse(t); return true; } catch { return false; } };
+function afterOpen() {
+  try { vault.ensureKey(); store.rewriteAll(); } catch (e) { log.error('encrypting data files failed', e); }
+}
+function readData() {
+  const raw = store.newestRaw(usableRaw);
+  const state = raw ? vault.open(raw) : 'plain';
+  if (state === 'locked' || state === 'foreign') { log.info('data is encrypted; waiting for unlock', { state }); return { __locked: true, vault: { state, ...vault.describe(raw) } }; }
+  const d = store.load();
+  if (d && !d.__locked && !d.__damaged) afterOpen();
+  return d;
+}
 const writeData = obj => store.save(obj);
 process.on('uncaughtException', e => { log.error('uncaughtException', e); });
 process.on('unhandledRejection', e => { log.error('unhandledRejection', e); });
@@ -269,6 +296,37 @@ else {
     ipcMain.handle('data:load', () => readData());
     ipcMain.handle('data:save', (_e, obj) => writeData(obj));
     ipcMain.on('data:saveSync', (e, obj) => { e.returnValue = writeData(obj); }); // used when the window is closing
+    /* ---- encryption (vault.js) ---- */
+    const vaultOut = () => ({ ...vault.status() });
+    const unlockWith = fn => {
+      const raw = store.newestRaw(usableRaw);
+      if (!raw) return { ok: false, reason: 'nodata' };
+      const r = fn(raw);
+      if (!r.ok) { log.warn('unlock failed', { reason: r.reason }); return r; }
+      const d = store.load();
+      if (!d || d.__locked) return { ok: false, reason: 'unreadable' };
+      afterOpen();
+      log.info('data unlocked');
+      return { ok: true, data: d, vault: vaultOut() };
+    };
+    ipcMain.handle('vault:status', () => vaultOut());
+    ipcMain.handle('vault:unlock', (_e, pin) => unlockWith(raw => vault.unlockPasscode(raw, String(pin || ''))));
+    ipcMain.handle('vault:recover', (_e, code) => unlockWith(raw => vault.unlockRecovery(raw, String(code || ''))));
+    ipcMain.handle('vault:verify', (_e, pin) => vault.verifyPasscode(String(pin || '')));
+    ipcMain.handle('vault:setPasscode', (_e, pin) => {
+      try { const { recoveryKey } = vault.setPasscode(String(pin || '')); store.rewriteAll(); log.info('passcode encryption on'); return { ok: true, recoveryKey, vault: vaultOut() }; }
+      catch (e) { log.error('set passcode failed', e); return { ok: false, error: e.code || 'failed' }; }
+    });
+    ipcMain.handle('vault:clearPasscode', () => { try { vault.clearPasscode(); store.rewriteAll(); log.info('passcode encryption off'); return { ok: true, vault: vaultOut() }; } catch (e) { log.error('clear passcode failed', e); return { ok: false }; } });
+    ipcMain.handle('vault:newRecovery', () => { try { const { recoveryKey } = vault.newRecoveryKey(); store.rewriteAll(); return { ok: true, recoveryKey }; } catch (e) { return { ok: false, error: e.code || 'failed' }; } });
+    /* data encrypted for another PC/Windows account and no recovery key: keep it aside (renamed, never deleted) and start fresh */
+    ipcMain.handle('vault:setAside', () => {
+      const ts = Date.now(), moved = [];
+      for (const n of ['penny-data.json', 'penny-data.lastgood.json']) { try { fs.renameSync(path.join(dataDir(), n), path.join(dataDir(), n.replace('.json', `.locked-${ts}.json`))); moved.push(n); } catch {} }
+      try { fs.renameSync(backupDir(), backupDir() + `.locked-${ts}`); moved.push('backups'); } catch {}
+      log.warn('encrypted data set aside', moved);
+      return { ok: true, moved };
+    });
     ipcMain.handle('data:snapshot', (_e, kind) => store.snapshot(kind));
     ipcMain.handle('backups:list', () => store.listBackups());
     ipcMain.handle('backups:read', (_e, name) => store.readBackup(name));
@@ -280,6 +338,16 @@ else {
       const r = await dialog.showSaveDialog(win, { defaultPath: name, filters });
       if (r.canceled || !r.filePath) return false;
       fs.writeFileSync(r.filePath, content, 'utf8');
+      return r.filePath;
+    });
+    /* the current page as a PDF (Financial Health Report). The renderer switches to its print layout first. */
+    ipcMain.handle('file:pdf', async (_e, name) => {
+      if (!win) return false;
+      const r = await dialog.showSaveDialog(win, { defaultPath: String(name || 'Penny report.pdf').replace(/[\\/:*?"<>|]/g, '-'), filters: [{ name: 'PDF', extensions: ['pdf'] }] });
+      if (r.canceled || !r.filePath) return false;
+      const pdf = await win.webContents.printToPDF({ printBackground: true, pageSize: 'A4', margins: { top: 0.5, bottom: 0.5, left: 0.45, right: 0.45 } });
+      fs.writeFileSync(r.filePath, pdf);
+      log.info('report saved as PDF');
       return r.filePath;
     });
     ipcMain.handle('file:import', async (_e, { filters }) => {
@@ -312,7 +380,7 @@ else {
     updater.onState(st => send('update-state', st));
     const autoCheck = () => { if (sys.autoUpdate) updater.check(sys, { silent: true }); };
     setTimeout(autoCheck, 12000); setInterval(autoCheck, 6 * 3600e3);
-    ipcMain.handle('upd:get', () => ({ ...updater.getState(), feed: updater.feedUrl(sys), autoUpdate: sys.autoUpdate }));
+    ipcMain.handle('upd:get', () => ({ ...updater.getState(), ...updater.sourceOf(sys), feed: updater.feedUrl(sys), autoUpdate: sys.autoUpdate }));
     ipcMain.handle('upd:check', () => updater.check(sys, { silent: false }));
     ipcMain.handle('upd:apply', async () => {
       try { if (win) await win.webContents.executeJavaScript('window.__flushSync&&window.__flushSync()'); } catch (e) { log.error('flush before update failed', e); }

@@ -14,17 +14,17 @@
     product: 'Penny',
     appId: 'com.akrot.penny',         // Windows AppUserModelID (notifications, taskbar). Was com.penny.app before 1.7.0.
     // ---- REQUIRED before public release (left empty on purpose: they were not provided) ----
-    supportUrl: '',                   // e.g. https://akrot.example/penny/support   (https only)
+    supportUrl: 'https://github.com/abdallhhelles/penny/issues', // e.g. https://akrot.example/penny/support   (https only)
     supportDiscord: 'akrott',         // Discord username for support and privacy requests (provided by the publisher)
-    updateRepo: '',                   // GitHub repository that hosts the signed update files, as owner/name (e.g. akrot/penny). The repo's Releases must be public. Penny then checks https://github.com/<owner>/<name>/releases/latest/download/latest.json
+    updateRepo: 'abdallhhelles/penny',                 // GitHub repository that hosts the signed update files, as owner/name (e.g. akrot/penny). The repo's Releases must be public. Penny then checks https://github.com/<owner>/<name>/releases/latest/download/latest.json
     discordInvite: '',                // Discord server invite, https only (e.g. https://discord.gg/xxxx). Paste it here when the server exists; About then shows an Open button.
     supportEmail: '',                 // support + privacy requests, e.g. privacy@akrot.example
-    website: '',                      // optional, https only
+    website: 'https://github.com/abdallhhelles/penny',            // optional, https only
     postalAddress: '',                // registered address of the controller (needed for GDPR-style notices)
     governingLaw: '',                 // e.g. "the laws of England and Wales"
     // ---- document versions ----
     eulaVersion: '1.1.0',
-    privacyVersion: '1.1.0',
+    privacyVersion: '1.2.0',
     docsDate: '2026-10-16',
     // ---- privacy facts (these describe how the app actually behaves) ----
     retention: { dailyBackups: 14, beforeChangeBackups: 20, preMigrationBackups: 8, manualBackups: 30, logFiles: 2, logMaxMB: 1 }

@@ -145,7 +145,7 @@ test('transfer: export format carries schema, version and a checksum; legacy lum
   C.run("S=normalize(freshData('Z'))");
   const txt = await C.run('buildExport({settings:true})');
   const j = JSON.parse(txt);
-  assert.equal(j.format, 'penny-export'); assert.equal(j.schema, 3); assert.equal(j.appVersion, '1.8.0'); assert.ok(/^[0-9a-f]{64}$/.test(j.checksum));
+  assert.equal(j.format, 'penny-export'); assert.equal(j.schema, 3); assert.equal(j.appVersion, require('../package.json').version); assert.ok(/^[0-9a-f]{64}$/.test(j.checksum));
   assert.match(fs.readFileSync(R + 'transfer.js', 'utf8'), /lumivault-export/);
 });
 test('transfer: merge remaps split categories and skips exact duplicates', () => {

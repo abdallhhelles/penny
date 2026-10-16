@@ -16,8 +16,8 @@ def main():
         pkg = json.load(open(os.path.join(ROOT, 'package.json')))
         pg.evaluate("SET_CAT='about';go('settings')"); pg.wait_for_timeout(600)
         txt = pg.evaluate("document.getElementById('view').innerText")
-        check('I1 About shows version 1.8.0 and publisher Akrot', '1.8.0' in txt and 'Akrot' in txt and 'by Akrot' in txt, txt[:200])
-        check('I2 package.json author/appId/version are Akrot / 1.8.0', pkg['author'] == 'Akrot' and pkg['build']['appId'] == 'com.akrot.penny' and pkg['version'] == '1.8.0')
+        check('I1 About shows version 1.9.0 and publisher Akrot', '1.9.0' in txt and 'Akrot' in txt and 'by Akrot' in txt, txt[:200])
+        check('I2 package.json author/appId/version are Akrot / 1.9.0', pkg['author'] == 'Akrot' and pkg['build']['appId'] == 'com.akrot.penny' and pkg['version'] == '1.9.0')
         check('I3 BRAND version in the renderer matches package.json', pg.evaluate("BRAND.version") == pkg['version'])
         for kind, needle in (('help', 'Getting started'), ('shortcuts', 'Ctrl K'), ('eula', 'END-USER LICENSE AGREEMENT'), ('privacy', 'PRIVACY NOTICE'), ('oss', 'Electron')):
             pg.evaluate(f"openDoc('{kind}')"); pg.wait_for_timeout(300)

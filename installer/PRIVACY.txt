@@ -1,8 +1,10 @@
 PENNY PRIVACY NOTICE
-Version 1.1.0 · 2026-10-16
+Version 1.2.0 · 2026-10-16
 
 Who is responsible. Akrot publishes Penny. Your financial data never reaches Akrot: it is created and kept on your own device, so you control it. Akrot acts as the data controller only for what you choose to send us, for example a support email.
   Discord: akrott
+  Support: https://github.com/abdallhhelles/penny/issues
+  Website: https://github.com/abdallhhelles/penny
 
 What Penny stores, and where. Everything is on your PC, in %APPDATA%\Penny:
   - penny-data.json: your accounts, transactions, budgets, goals, rules, reminders and settings;
@@ -10,10 +12,10 @@ What Penny stores, and where. Everything is on your PC, in %APPDATA%\Penny:
   - system.json, window.json: window position and Windows options such as start-up and tray;
   - license.json: your license key, if you activated one;
   - logs\: a diagnostic log of up to 2 rotating files of 1 MB. It records technical events, never amounts, payees or notes.
-If you set a passcode, only a salted hash of it is stored. The passcode screen is a privacy screen, not encryption of the data file.
+Encryption. On Windows, the data file and every backup are encrypted with AES-256-GCM using a random key that is protected by your Windows account (Windows DPAPI). If you set a passcode, that key is additionally locked with your passcode (scrypt key derivation), and a recovery key is shown to you once; Akrot never sees your passcode or recovery key and cannot recover your data without them. Exports are encrypted only if you choose a password when exporting.
 
 What is sent over the network. Nothing about you or your money. Penny has no accounts, analytics, advertising, crash reporting or cloud sync, and never asks for bank credentials.
-  - Optional update check: if an update address is set, Penny downloads a small version file from it, and a newer signed bundle when you choose to update. The server that hosts it can see your IP address and the request, as any web server can. You can switch this off in Settings.
+  - Update check: Penny downloads a small version file from GitHub Releases (github.com, run by GitHub, Inc.) about every six hours, and a newer signed bundle when one exists. GitHub can see your IP address and the request, as any web server can; no data about you or your money is sent. You can switch automatic checks off in Settings > Updates & help.
   - Setup downloads the open-source Electron runtime once from its public host. That request comes from your PC and carries no Penny data.
   - Files you import or export are read and written only where you point them.
 
@@ -31,4 +33,4 @@ Children. Penny is a general-audience tool and is not directed at children.
 
 Changes. If this notice changes materially, the new version ships with the update and the version number above changes.
 
-Contact. Discord: akrott
+Contact. Discord: akrott; Support: https://github.com/abdallhhelles/penny/issues; Website: https://github.com/abdallhhelles/penny

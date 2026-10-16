@@ -56,10 +56,10 @@ What ${P.product} stores, and where. Everything is on your PC, in %APPDATA%\\${P
   - system.json, window.json: window position and Windows options such as start-up and tray;
   - license.json: your license key, if you activated one;
   - logs\\: a diagnostic log of up to ${r.logFiles} rotating files of ${r.logMaxMB} MB. It records technical events, never amounts, payees or notes.
-If you set a passcode, only a salted hash of it is stored. The passcode screen is a privacy screen, not encryption of the data file.
+Encryption. On Windows, the data file and every backup are encrypted with AES-256-GCM using a random key that is protected by your Windows account (Windows DPAPI). If you set a passcode, that key is additionally locked with your passcode (scrypt key derivation), and a recovery key is shown to you once; ${P.name} never sees your passcode or recovery key and cannot recover your data without them. Exports are encrypted only if you choose a password when exporting.
 
 What is sent over the network. Nothing about you or your money. ${P.product} has no accounts, analytics, advertising, crash reporting or cloud sync, and never asks for bank credentials.
-  - Optional update check: if an update address is set, ${P.product} downloads a small version file from it, and a newer signed bundle when you choose to update. The server that hosts it can see your IP address and the request, as any web server can. You can switch this off in Settings.
+  - Update check: ${P.product} downloads a small version file from GitHub Releases (github.com, run by GitHub, Inc.) about every six hours, and a newer signed bundle when one exists. GitHub can see your IP address and the request, as any web server can; no data about you or your money is sent. You can switch automatic checks off in Settings > Updates & help.
   - Setup downloads the open-source Electron runtime once from its public host. That request comes from your PC and carries no ${P.product} data.
   - Files you import or export are read and written only where you point them.
 
