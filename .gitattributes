@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+# The release gate compares these byte-for-byte with Windows line endings
+installer/LICENSE.txt text eol=crlf
+installer/PRIVACY.txt text eol=crlf
