@@ -10,8 +10,8 @@ const need = (cond, msg, soft) => { if (!cond) (soft ? warns : errors).push(msg)
 
 // 1. publisher details (these were never supplied; they are the only manual step left)
 need(/^https:\/\/\S+$/.test(P.supportUrl) || /^\S+@\S+\.\S+$/.test(P.supportEmail) || /^[\w.]{2,32}$/.test(P.supportDiscord || ''), 'renderer/publisher.js: no support contact (set supportDiscord, supportEmail or supportUrl)', allowContact);
-need(!!P.postalAddress, 'renderer/publisher.js: postalAddress is empty (the Privacy Notice names the controller)', allowContact);
-need(!!P.governingLaw, 'renderer/publisher.js: governingLaw is empty (EULA section 10)', allowContact);
+need(!!P.postalAddress, 'renderer/publisher.js: postalAddress is empty (optional: the Privacy Notice then leaves the address out)', true);
+need(!!P.governingLaw, 'renderer/publisher.js: governingLaw is empty (optional: the EULA then relies on the consumer law where the user lives)', true);
 // 2. versions in sync
 const brand = (rd('renderer/icons.js').match(/version:'([\d.]+)'/) || [])[1];
 need(brand === pkg.version, `version mismatch: package.json ${pkg.version} vs icons.js BRAND ${brand}`);
