@@ -1,4 +1,4 @@
-# Penny Beta 1 (1.11.0)
+# Penny Beta 1 (1.0.0)
 
 The first public beta of Penny: private, offline personal finance for Windows, now in five languages. Everything is free during the beta. Feedback is welcome on Discord: https://discord.gg/r5kNGC6p29
 

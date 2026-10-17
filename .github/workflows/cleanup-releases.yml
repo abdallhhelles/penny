@@ -1,0 +1,33 @@
+# Removes old GitHub releases and their version tags, keeping only the version in package.json.
+# Run it by hand: Actions > Clean up old releases > Run workflow, and type DELETE in the box. It cannot be undone.
+name: Clean up old releases
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type DELETE to remove every release and version tag except the current package.json version'
+        required: true
+permissions:
+  contents: write
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Delete old releases and tags
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CONFIRM: ${{ inputs.confirm }}
+        run: |
+          if [ "$CONFIRM" != "DELETE" ]; then echo "::error::Type DELETE to confirm."; exit 1; fi
+          KEEP="v$(node -p "require('./package.json').version")"
+          echo "Keeping $KEEP"
+          for tag in $(gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100" --jq '.[].tag_name'); do
+            if [ "$tag" != "$KEEP" ]; then echo "Deleting release $tag"; gh release delete "$tag" --yes --cleanup-tag || true; fi
+          done
+          for tag in $(gh api "repos/${GITHUB_REPOSITORY}/tags?per_page=100" --jq '.[].name'); do
+            if [ "$tag" != "$KEEP" ] && printf '%s' "$tag" | grep -Eq '^[vV]?[.-]?[0-9]+\.[0-9]+'; then
+              echo "Deleting tag $tag"; gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/tags/$tag" || true
+            fi
+          done
+          echo "Done. Remaining releases:"; gh release list

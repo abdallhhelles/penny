@@ -209,6 +209,10 @@ Section "Install" SecInstall
   Sleep 400
 
   ; ---- 1. app files (small) ----
+  ; Setup always installs a complete, current app: drop any update bundles downloaded earlier, so the version installed here
+  ; is the one that runs (also when installing a lower version number over a test build).
+  ; Only the updates folder is removed; your data, backups and settings are untouched.
+  RMDir /r "$APPDATA\Penny\updates"
   DetailPrint "$(L_FILES)"
   CreateDirectory "$INSTDIR"
   RMDir /r "$INSTDIR\resources\app"
