@@ -23,7 +23,7 @@ const launchedHidden = process.argv.includes('--hidden');
 
 /* ---------- logging + data (see log.js / store.js) ---------- */
 const { createLogger } = require('./log');
-const { createStore, createVault } = require('./store');
+const { createStore, createVault, createAttachments, attExt, ATT_TYPES } = require('./store');
 const log = createLogger(app.getPath('userData'));
 /* Windows DPAPI through Electron safeStorage. On Linux without a keyring Electron falls back to a fixed key ("basic_text"),
    which protects nothing, so it is treated as unavailable there (data then stays plain unless a passcode is set). */
@@ -41,10 +41,14 @@ const device = {
 };
 const vault = createVault({ device, log });
 const store = createStore(app.getPath('userData'), log, vault);
+const attach = createAttachments(app.getPath('userData'), vault, log);
+/* "Open" decrypts a copy into a private temp folder (emptied at start and quit) for the system viewer */
+const viewDir = () => path.join(app.getPath('temp'), 'Penny-attachments');
+const clearViewDir = () => { try { fs.rmSync(viewDir(), { recursive: true, force: true }); } catch {} };
 /* newest file the vault can read keys from: an encrypted file, or valid plain JSON */
 const usableRaw = t => { if (vault.peek(t)) return true; try { JSON.parse(t); return true; } catch { return false; } };
 function afterOpen() {
-  try { vault.ensureKey(); store.rewriteAll(); } catch (e) { log.error('encrypting data files failed', e); }
+  try { vault.ensureKey(); store.rewriteAll(); attach.rewriteAll(); } catch (e) { log.error('encrypting data files failed', e); }
 }
 function readData() {
   const raw = store.newestRaw(usableRaw);
@@ -284,8 +288,9 @@ else {
   app.on('second-instance', (_e, argv) => { log.info('second instance blocked; focusing existing window'); showWin(); handleArgv(argv); });
   app.on('child-process-gone', (_e, d) => log.error('child-process-gone', d));
   app.on('before-quit', () => { quitting = true; log.info('before-quit'); });
-  app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch {} });
+  app.on('will-quit', () => { try { globalShortcut.unregisterAll(); } catch {} clearViewDir(); });
   app.whenReady().then(() => {
+    clearViewDir();
     migrateLegacy(); loadSys(); initMainI18n();
     if (process.platform === 'win32') { // let Windows attribute toast notifications to Penny
       try {
@@ -316,11 +321,11 @@ else {
     ipcMain.handle('vault:recover', (_e, code) => unlockWith(raw => vault.unlockRecovery(raw, String(code || ''))));
     ipcMain.handle('vault:verify', (_e, pin) => vault.verifyPasscode(String(pin || '')));
     ipcMain.handle('vault:setPasscode', (_e, pin) => {
-      try { const { recoveryKey } = vault.setPasscode(String(pin || '')); store.rewriteAll(); log.info('passcode encryption on'); return { ok: true, recoveryKey, vault: vaultOut() }; }
+      try { const { recoveryKey } = vault.setPasscode(String(pin || '')); store.rewriteAll(); attach.rewriteAll(); log.info('passcode encryption on'); return { ok: true, recoveryKey, vault: vaultOut() }; }
       catch (e) { log.error('set passcode failed', e); return { ok: false, error: e.code || 'failed' }; }
     });
-    ipcMain.handle('vault:clearPasscode', () => { try { vault.clearPasscode(); store.rewriteAll(); log.info('passcode encryption off'); return { ok: true, vault: vaultOut() }; } catch (e) { log.error('clear passcode failed', e); return { ok: false }; } });
-    ipcMain.handle('vault:newRecovery', () => { try { const { recoveryKey } = vault.newRecoveryKey(); store.rewriteAll(); return { ok: true, recoveryKey }; } catch (e) { return { ok: false, error: e.code || 'failed' }; } });
+    ipcMain.handle('vault:clearPasscode', () => { try { vault.clearPasscode(); store.rewriteAll(); attach.rewriteAll(); log.info('passcode encryption off'); return { ok: true, vault: vaultOut() }; } catch (e) { log.error('clear passcode failed', e); return { ok: false }; } });
+    ipcMain.handle('vault:newRecovery', () => { try { const { recoveryKey } = vault.newRecoveryKey(); store.rewriteAll(); attach.rewriteAll(); return { ok: true, recoveryKey }; } catch (e) { return { ok: false, error: e.code || 'failed' }; } });
     /* data encrypted for another PC/Windows account and no recovery key: keep it aside (renamed, never deleted) and start fresh */
     ipcMain.handle('vault:setAside', () => {
       const ts = Date.now(), moved = [];
@@ -336,6 +341,8 @@ else {
     ipcMain.handle('app:openLogs', () => shell.openPath(path.dirname(log.file)));
     ipcMain.handle('win:material', (_e, m) => { if (win && process.platform === 'win32') { try { win.setBackgroundMaterial(m); } catch {} } return true; });
     ipcMain.on('win:themeGet', e => { e.returnValue = uiDark() ? 'dark' : 'light'; });
+    // right-click menu: clipboard and undo commands run on the window that asked (never anything else)
+    ipcMain.handle('win:edit', (e, c) => { if (['undo', 'redo', 'cut', 'copy', 'paste', 'selectAll'].includes(c)) e.sender[c](); });
     ipcMain.handle('win:theme', (_e, t) => {
       if (t !== 'light' && t !== 'dark') return false;
       if (sys.uiTheme !== t) { sys.uiTheme = t; saveSys(); }
@@ -359,6 +366,44 @@ else {
       log.info('report saved as PDF');
       return r.filePath;
     });
+    /* ---- attachments ---- */
+    const attErr = e => ({ ok: false, error: (e && e.code) || 'failed' });
+    ipcMain.handle('att:pick', async () => {
+      const r = await dialog.showOpenDialog(win, { properties: ['openFile', 'multiSelections'], filters: [
+        { name: 'Receipts, photos and documents', extensions: Object.keys(ATT_TYPES) }, { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'heic', 'heif'] }, { name: 'PDF', extensions: ['pdf'] }] });
+      if (r.canceled) return { ok: true, files: [] };
+      const files = [], bad = [];
+      for (const f of r.filePaths.slice(0, 10)) {
+        try { if (fs.statSync(f).size > 20 * 1024 * 1024) { bad.push({ name: path.basename(f), error: 'SIZE' }); continue; } files.push(attach.save(path.basename(f), fs.readFileSync(f))); }
+        catch (e) { bad.push({ name: path.basename(f), error: e.code || 'failed' }); }
+      }
+      if (files.length) log.info(`attached ${files.length} file(s)`);
+      return { ok: true, files, bad };
+    });
+    ipcMain.handle('att:save', (_e, o) => { try { return { ok: true, file: attach.save(o && o.name, Buffer.from((o && o.bytes) || [])) }; } catch (e) { return attErr(e); } });
+    ipcMain.handle('att:preview', (_e, id) => {   // images only: the app shows them itself
+      try { const f = attach.read(id); if (!/^image\/(jpeg|png|webp|gif|bmp)$/.test(f.type)) return { ok: false, error: 'NO_PREVIEW' }; return { ok: true, type: f.type, bytes: f.bytes }; } catch (e) { return attErr(e); }
+    });
+    ipcMain.handle('att:open', async (_e, id) => {
+      try {
+        const f = attach.read(id), ext = attExt('x.' + f.ext);
+        if (!ext) return { ok: false, error: 'TYPE' };
+        const d = path.join(viewDir(), String(id)); fs.mkdirSync(d, { recursive: true });
+        const base = f.name.replace(/\.[A-Za-z0-9]{1,5}$/, '').replace(/[^\w .()\-]+/g, ' ').trim().slice(0, 80) || 'attachment';
+        const p = path.join(d, base + '.' + ext); fs.writeFileSync(p, f.bytes);
+        const err = await shell.openPath(p); return err ? { ok: false, error: 'OPEN' } : { ok: true };
+      } catch (e) { return attErr(e); }
+    });
+    ipcMain.handle('att:saveAs', async (_e, id) => {
+      try {
+        const f = attach.read(id);
+        const r = await dialog.showSaveDialog(win, { defaultPath: f.name, filters: [{ name: f.ext.toUpperCase(), extensions: [f.ext] }] });
+        if (r.canceled || !r.filePath) return { ok: false, error: 'CANCELED' };
+        fs.writeFileSync(r.filePath, f.bytes); return { ok: true };
+      } catch (e) { return attErr(e); }
+    });
+    ipcMain.handle('att:remove', (_e, id) => ({ ok: attach.remove(id) }));
+    ipcMain.handle('att:gc', (_e, ids) => { try { return { ok: true, removed: attach.gc(Array.isArray(ids) ? ids.map(String) : []) }; } catch (e) { return attErr(e); } });
     ipcMain.handle('file:import', async (_e, { filters }) => {
       const r = await dialog.showOpenDialog(win, { properties: ['openFile'], filters });
       if (r.canceled || !r.filePaths[0]) return null;

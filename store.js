@@ -411,4 +411,69 @@ function createVault({ device = null, log = { info() {}, warn() {}, error() {} }
 }
 
 
-module.exports = { createStore, saveable, loadable, meaningful, createVault, makeRecoveryKey, normRecovery, VAULT_VERSION };
+
+/* =========================================================================
+   Attachments (1.10): receipts, photos and documents linked to transactions.
+   Each file is stored once in <data>/attachments/<id>.att, encrypted with the same vault key as your data
+   (plain only where the data itself is plain). The data file keeps just a small reference {id,name,ext,size,added}.
+   Only document and image types are accepted, so nothing runnable is ever stored or opened.
+   ========================================================================= */
+const ATT_TYPES = {
+  jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', bmp: 'image/bmp', heic: 'image/heic', heif: 'image/heif',
+  pdf: 'application/pdf', txt: 'text/plain', csv: 'text/csv', rtf: 'application/rtf', eml: 'message/rfc822',
+  doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xls: 'application/vnd.ms-excel', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  odt: 'application/vnd.oasis.opendocument.text', ods: 'application/vnd.oasis.opendocument.spreadsheet'
+};
+const ATT_MAX = 20 * 1024 * 1024;
+const ATT_ID = /^[a-f0-9]{24}$/;
+const attExt = name => { const m = /\.([A-Za-z0-9]{1,5})$/.exec(String(name || '')); const e = m && m[1].toLowerCase(); return e && ATT_TYPES[e] ? e : null; };
+const attName = name => String(name || 'file').replace(/[\u0000-\u001f\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120) || 'file';
+function createAttachments(dir, codec, log = { info() {}, warn() {}, error() {} }) {
+  const adir = () => { const d = path.join(dir, 'attachments'); fs.mkdirSync(d, { recursive: true }); return d; };
+  const file = id => { if (!ATT_ID.test(String(id))) throw Object.assign(new Error('bad id'), { code: 'BAD_ID' }); return path.join(adir(), id + '.att'); };
+  function save(name, bytes) {
+    const ext = attExt(name);
+    if (!ext) throw Object.assign(new Error('This kind of file can’t be attached'), { code: 'TYPE' });
+    const buf = Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes || []);
+    if (!buf.length) throw Object.assign(new Error('empty file'), { code: 'EMPTY' });
+    if (buf.length > ATT_MAX) throw Object.assign(new Error('file larger than 20 MB'), { code: 'SIZE' });
+    const id = crypto.randomBytes(12).toString('hex'), nm = attName(name);
+    const text = codec.encode(JSON.stringify({ v: 1, name: nm, ext, data: buf.toString('base64') }));   // throws LOCKED before touching the disk
+    const p = file(id), tmp = p + '.tmp';
+    fs.writeFileSync(tmp, text); fs.renameSync(tmp, p);
+    return { id, name: nm, ext, size: buf.length, added: new Date().toISOString().slice(0, 10) };
+  }
+  function read(id) {
+    const p = file(id);
+    if (!fs.existsSync(p)) throw Object.assign(new Error('not found'), { code: 'MISSING' });
+    const raw = fs.readFileSync(p, 'utf8'), o = JSON.parse(codec.decode(raw));
+    if (codec.current && !codec.current(raw)) { try { fs.writeFileSync(p, codec.encode(JSON.stringify(o))); } catch {} }   // re-wrap with the current keys
+    return { name: o.name, ext: o.ext, type: ATT_TYPES[o.ext] || 'application/octet-stream', bytes: Buffer.from(o.data, 'base64') };
+  }
+  function remove(id) { try { fs.unlinkSync(file(id)); return true; } catch { return false; } }
+  /** delete files no transaction refers to any more, but only once they are older than minAge (Undo and restoring recent backups keep working) */
+  function gc(liveIds, minAgeMs = 30 * 864e5, now = Date.now()) {
+    const live = new Set(liveIds || []); let n = 0;
+    let names = []; try { names = fs.readdirSync(adir()); } catch { return 0; }
+    for (const f of names) {
+      const m = /^([a-f0-9]{24})\.att(\.tmp)?$/.exec(f); if (!m) continue;
+      if (!m[2] && live.has(m[1])) continue;
+      try { const st = fs.statSync(path.join(adir(), f)); if (now - st.mtimeMs >= minAgeMs || m[2]) { fs.unlinkSync(path.join(adir(), f)); n++; } } catch {}
+    }
+    if (n) log.info(`removed ${n} unused attachment file(s)`);
+    return n;
+  }
+  /** after a passcode change: re-encrypt every attachment with the new keys (needs the old key, known this session) */
+  function rewriteAll() {
+    let names = []; try { names = fs.readdirSync(adir()); } catch { return; }
+    for (const f of names) {
+      const m = /^([a-f0-9]{24})\.att$/.exec(f); if (!m) continue;
+      try { const p = path.join(adir(), f), raw = fs.readFileSync(p, 'utf8'); if (codec.current && codec.current(raw)) continue; const t = codec.encode(codec.decode(raw)); fs.writeFileSync(p + '.tmp', t); fs.renameSync(p + '.tmp', p); }
+      catch (e) { log.warn('attachment re-encrypt skipped', f, e && e.code); }
+    }
+  }
+  return { save, read, remove, gc, rewriteAll, dir: adir };
+}
+
+module.exports = { createAttachments, attExt, ATT_TYPES, ATT_MAX, createStore, saveable, loadable, meaningful, createVault, makeRecoveryKey, normRecovery, VAULT_VERSION };

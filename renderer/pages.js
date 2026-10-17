@@ -10,7 +10,7 @@ const more=(go,label='See all')=>`<a data-go="${go}">${label}</a>`;
 function txAmount(t){const c=t.type==='income'?'good':t.type==='expense'?'':'muted';return`<span class="amt ${c}">${t.type==='income'?'+':t.type==='expense'?'−':''}${txMoney(t)}</span>`;}
 function txRow(t){const i=txIcon(t);const a=acc(t.accountId);
   const sub=t.type==='transfer'?`${esc(a?.name||'?')} → ${esc(acc(t.toAccountId)?.name||'?')}`:`${t.splits&&t.splits.length>1?trh('tx.split.n',{count:t.splits.length}):esc(cat(t.category).name)} · ${esc(a?.name||'')}`;
-  return`<div class="li" data-tx="${t.id}"><div class="sq" style="--c-bg:${i.c}2e">${gl(i.e)}</div><div class="grow"><b>${esc(txTitle(t))}</b><small>${sub}${t.note&&t.note!=='Recurring'&&t.note!=='Imported'?' · '+esc(t.note):''}${t.billId?` · ${icon('repeat',12,2)}`:''}</small></div><div class="end">${txAmount(t)}</div></div>`;}
+  return`<div class="li" data-tx="${t.id}"><div class="sq" style="--c-bg:${i.c}2e">${gl(i.e)}</div><div class="grow"><b>${esc(txTitle(t))}</b><small>${sub}${t.note&&t.note!=='Recurring'&&t.note!=='Imported'?' · '+esc(t.note):''}${t.billId?` · ${icon('repeat',12,2)}`:''}${t.files&&t.files.length?` · <span class="att-mark" title="${esc(tr('att.count',{count:t.files.length}))}">${icon('clip',12,2.2)}${t.files.length>1?t.files.length:''}</span>`:''}</small></div><div class="end">${txAmount(t)}</div></div>`;}
 const emptyBox=(e,t,sub,b)=>`<div class="empty"><div class="e">${gl(e,34)}</div><b>${t}</b>${sub||''}${b?`<div style="margin-top:14px">${b}</div>`:''}</div>`;
 const delta=(cur,prev,invert)=>{if(!prev)return'';const d=(cur-prev)/Math.abs(prev);const up=d>=0;const good=invert?!up:up;return`<span class="pill ${good?'good':'bad'}">${icon(up?'arrowup':'arrowdown',12,2.6)}${Math.abs(Math.round(d*100))}%</span>`;};
 const GRAD={checking:'linear-gradient(145deg,#2f9bff,#5E5CE6)',savings:'linear-gradient(145deg,#34d27b,#0fb5a8)',cash:'linear-gradient(145deg,#ffb340,#ff7a1a)',credit:'linear-gradient(145deg,#4a4a62,#171722)',investment:'linear-gradient(145deg,#c46bff,#ff4d78)',loan:'linear-gradient(145deg,#ff5a4f,#9b1c14)'};
@@ -122,6 +122,26 @@ function txRowSel(t){
   const on=SEL.ids.has(t.id);
   return r.replace(/^<div class="li" data-tx="([^"]+)">/,(m,id)=>`<div class="li selrow${on?' picked':''}" data-selid="${id}" role="checkbox" aria-checked="${on}" tabindex="0"><span class="chk">${on?icon('check',13,3):''}</span>`);
 }
+/* active filters as removable chips, so it is always clear why the list looks the way it does */
+function txChips(v){
+  const box=$('#fchips',v);if(!box)return;const D=F_DEFAULT,c=[];
+  const add=(k,label)=>c.push(`<button class="fchip" data-fx="${k}" aria-label="${esc(tr('tf.removeFilter',{name:label}))}"><span>${esc(label)}</span>${icon('x',12,2.6)}</button>`);
+  if(F.q.trim())add('q',tr('tf.chip.search',{text:F.q.trim()}));
+  if(F.type!==D.type)add('type',tr('tf.type.'+F.type));
+  if(F.range!==D.range)add('range',F.range==='custom'?`${F.from?dshort(F.from):'…'} – ${F.to?dshort(F.to):'…'}`:tr('tf.range.'+F.range));
+  if(F.acc!==D.acc&&acc(F.acc))add('acc',acc(F.acc).name);
+  if(F.cat!==D.cat)add('cat',cat(F.cat).name);
+  if(F.min!=='')add('min','≥ '+F.min);
+  if(F.max!=='')add('max','≤ '+F.max);
+  if(F.payee)add('payee',F.payee);
+  if(F.sort!==D.sort)add('sort',tr('tf.sort.'+F.sort));
+  box.innerHTML=c.length?c.join('')+(c.length>1?`<button class="fchip clear" data-fx="all">${trh('tf.clearAll')}</button>`:''):'';
+  box.hidden=!c.length;
+  if(!box._wired){box._wired=1;box.onclick=e=>{const b=e.target.closest('[data-fx]');if(!b)return;const k=b.dataset.fx;
+    if(k==='all')Object.assign(F,F_DEFAULT);else{F[k]=F_DEFAULT[k];if(k==='range'){F.from='';F.to='';}}
+    F.limit=F_DEFAULT.limit;refresh();const n=$('#fchips [data-fx]');(n||$('#fq')).focus({preventScroll:true});};}
+  const bar=$('.txbar',v);if(bar)v.closest('#view').style.setProperty('--txbar-h',bar.offsetHeight+'px');
+}
 function drawTxList(v){
   const cv=conv(),l=filteredTx(),inc=sum(l.filter(x=>x.type==='income'),cv),exp=sum(l.filter(x=>x.type==='expense'),cv);
   $('#txsum',v).innerHTML=`<span class="pill">${trh('tf.count',{count:l.length})}</span><span class="pill good">+${amt(inc)}</span><span class="pill bad">−${amt(exp)}</span><span class="pill">${trh('tf.net',{amount:'@@'}).replace('<bdi>@@</bdi>',amt(inc-exp))}</span>`;
@@ -134,6 +154,7 @@ function drawTxList(v){
       return`<div class="dayh">${esc(lab)}<span class="amt">${net>=0?'+':'−'}${money(Math.abs(net))}</span></div><div class="group">${g.list.map(txRowSel).join('')}</div>`;}).join('');
   }else $('#txbody',v).innerHTML=shown.length?`<div class="group">${shown.map(txRowSel).join('')}</div>`:'';
   if(!shown.length)$('#txbody',v).innerHTML=`<div class="group">${emptyBox('🔍',trh('tf.none'),`<div>${trh('tf.noneHint')}</div>`)}</div>`;
+  txChips(v);
   const mo=$('#more',v);mo.style.display=l.length>F.limit?'':'none';mo.textContent=tr('tf.showMore',{count:Math.min(200,l.length-F.limit)});
   drawSelBar(v,l);
 }
@@ -212,7 +233,8 @@ PAGES.transactions={title:'Transactions',
   <select id="fr" class="pillsel" aria-label="${trh('tf.period')}">${['period','last','3m','year','all','custom'].map(k=>opt(k,tr('tf.range.'+k),F.range===k)).join('')}</select>
   <select id="fa" class="pillsel" aria-label="${trh('tx.account')}">${opt('all',tr('tf.allAccounts'),F.acc==='all')}${accOpts(F.acc)}</select>
   <select id="fc" class="pillsel" aria-label="${trh('tx.category')}">${opt('all',tr('tf.allCategories'),F.cat==='all')}${S.categories.map(c=>opt(c.id,c.name,F.cat===c.id)).join('')}</select>
-  <button class="btn pillbtn ${adv?'on':''}" id="fmore" aria-expanded="${adv?'true':'false'}">${icon('sliders',15)}${trh('tf.moreFilters')}${adv?`<span class="cnt">${adv}</span>`:''}</button></div>
+  <button class="btn pillbtn ${adv?'on':''}" id="fmore" aria-expanded="${adv?'true':'false'}">${icon('sliders',15)}${trh('tf.moreFilters')}${adv?`<span class="cnt">${adv}</span>`:''}</button>
+  <div class="fchips" id="fchips" role="group" aria-label="${trh('tf.active')}"></div></div>
   <div class="advbox group" id="fadv" ${adv||F.range==='custom'?'':'hidden'}>
    <div class="advgrid">
     <label class="adv"><span>${trh('tf.min')}</span><input id="f_min" type="number" inputmode="decimal" min="0" step="any" value="${esc(F.min)}" placeholder="0"></label>

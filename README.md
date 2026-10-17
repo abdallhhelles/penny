@@ -13,7 +13,10 @@
 - **For everyone.** English, Spanish and Arabic (right-to-left), any currency, local number and date formats, keyboard and screen-reader friendly. New users get a guided tour.
 
 ## Features
-Overview dashboard · transactions with natural-language entry · bank statement import (CSV, OFX) with duplicate detection · accounts, credit cards and loans · budgets with auto-suggest · safe-to-spend today · goals · bills and subscriptions · reminders with Windows notifications · calendar · insights · Financial Health Report · planner · rules · multi-currency · privacy blur (P) · passcode lock and encryption · automatic, validated backups · encrypted export · signed in-app updates from GitHub Releases.
+Overview dashboard · transactions with natural-language entry · receipts and files on transactions (encrypted) · right-click menus · bank statement import (CSV, OFX) with duplicate detection · accounts, credit cards and loans · budgets with auto-suggest · safe-to-spend today · goals · bills and subscriptions · reminders with Windows notifications · calendar · insights · Financial Health Report · planner · rules · multi-currency · privacy blur (P) · passcode lock and encryption · automatic, validated backups · encrypted export · signed in-app updates from GitHub Releases.
+
+## Community
+Questions, ideas and early news: [join the Penny Discord](https://discord.gg/r5kNGC6p29).
 
 ## Install
 Download the latest installer from [Releases](https://github.com/abdallhhelles/penny/releases). Penny then keeps itself up to date: it checks GitHub, verifies each update's signature, and asks you to restart.

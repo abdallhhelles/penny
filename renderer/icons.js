@@ -89,6 +89,12 @@ const ICONS={
  download:'<path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14"/>',
  key:'<circle cx="8" cy="15" r="4"/><path d="M10.9 12.1L19 4M16 7l2.5 2.5M14 9l2 2"/>',
  refresh:'<path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4"/>',
+ clip:'<path d="M20 11.5l-7.8 7.8a5 5 0 0 1-7.1-7.1l8.2-8.2a3.3 3.3 0 0 1 4.7 4.7l-8.2 8.2a1.7 1.7 0 0 1-2.4-2.4L15 7"/>',
+ file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
+ edit:'<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+ external:'<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>',
+ paste:'<rect x="5" y="4.5" width="14" height="16" rx="2.5"/><path d="M9 4.5V3.8A1.3 1.3 0 0 1 10.3 2.5h3.4A1.3 1.3 0 0 1 15 3.8v.7M9 11h6M9 15h4"/>',
+ selectall:'<rect x="4" y="4" width="16" height="16" rx="3" stroke-dasharray="3 2.6"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
  rocket:'<path d="M12 15l-3-3c1.4-4.6 4.7-7.7 10-8.5-.8 5.3-3.9 8.6-8.5 10"/><path d="M9 12l-3.5.5L4 15l4 1M12 15l-.5 3.5L9 20l-1-4M14.8 9.2h.01"/>'
 };
 const DIR_ICONS=new Set(['chevron','chevleft']); // icons that point left/right are mirrored in right-to-left languages (see .flip in style.css)

@@ -54,6 +54,7 @@ function sanitizeData(d){
   let badSplit=0;
   for(const t of d.transactions){
     if(t.fitid!==undefined&&typeof t.fitid!=='string')delete t.fitid;
+    if(t.files!==undefined){const ok=Array.isArray(t.files)?t.files.filter(f=>f&&/^[a-f0-9]{24}$/.test(f.id)&&typeof f.name==='string'&&/^[a-z0-9]{1,5}$/.test(f.ext)&&Number.isFinite(f.size)).slice(0,30).map(f=>({id:f.id,name:f.name.slice(0,120),ext:f.ext,size:f.size,added:typeof f.added==='string'?f.added.slice(0,10):''})):[];if(ok.length)t.files=ok;else delete t.files;}
     if(t.splits!==undefined){const ok=t.type!=='transfer'&&Array.isArray(t.splits)&&t.splits.every(x=>x&&Number.isFinite(x.amount)&&catIds.has(x.category))&&Finance.validateSplits(t.amount,t.splits).ok;if(!ok){delete t.splits;badSplit++;}}
   }
   if(badSplit)warn.push(`${badSplit} split transaction${badSplit>1?'s were':' was'} kept as a single category (the parts did not add up).`);

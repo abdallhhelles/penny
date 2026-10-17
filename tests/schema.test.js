@@ -12,7 +12,7 @@ function sandbox() {
     addEventListener() {}, ResizeObserver: class { observe() {} }, structuredClone };
   ctx.window = ctx; ctx.self = ctx; vm.createContext(ctx);
   const html = fs.readFileSync(R + 'index.html', 'utf8');
-  const order = [...html.matchAll(/<script src="([^"]+)"/g)].map(m => m[1]).filter(f => !['app.js', 'guide.js', 'lang.js', 'remind.js', 'pages.js', 'pages2.js', 'explain.js', 'money.js', 'report.js', 'insights.js', 'docs.js', 'import-wizard.js', 'a11y.js'].includes(f));
+  const order = [...html.matchAll(/<script src="([^"]+)"/g)].map(m => m[1]).filter(f => !['app.js', 'guide.js', 'lang.js', 'remind.js', 'pages.js', 'pages2.js', 'explain.js', 'money.js', 'report.js', 'insights.js', 'docs.js', 'import-wizard.js', 'a11y.js', 'nav.js', 'ctxmenu.js', 'attach.js'].includes(f));
   for (const f of order) vm.runInContext(fs.readFileSync(R + f, 'utf8'), ctx, { filename: f });
   ctx.$ = n => vm.runInContext(n, ctx);                       // read a top-level const/let
   ctx.run = (code) => vm.runInContext(code, ctx);

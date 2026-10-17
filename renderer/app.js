@@ -45,17 +45,18 @@ function setTheme(t){
 
 function updateSideFoot(){const e=$('#sf');if(!e)return;const n=S.settings.name||tr('side.you');e.innerHTML=`${avatarHtml(36)}<div class="txt"><b>${esc(S.settings.nick||n)}</b><small>${S.settings.why?esc(S.settings.why):trh('side.private')}</small></div>`;}
 function updatePrivBtn(){const b=$('#privbtn');if(b)b.innerHTML=icon(S.settings.privacy?'eyeoff':'eye',20);}
-function updateBadge(){const n=$('[data-nav=bills] .badge');const c=S?dueSoon(3).filter(x=>x.overdue||x.d<=today()).length:0;if(n){n.textContent=c;n.style.display=c?'':'none';}syncNative(c);}
+function updateBadge(){const c=S?dueSoon(3).filter(x=>x.overdue||x.d<=today()).length:0;setNavBadge('bills',c,tr('navb.bills',{count:c}));updateNavBadges();syncNative(c);}
 const syncNative=debounce(c=>{if(!hasNative||!S)return;try{const sp=safeToSpend(),left=sp.perDay-sp.spentToday;native.tooltip(S.settings.privacy?tr('tray.tooltipHidden'):tr('tray.tooltipSafe',{amount:money(Math.max(0,left))}));native.badge(c);}catch{}},600);
 function buildShell(){
-  $('#side').innerHTML=`<div class="brand"><div class="logo">${LOGO_SVG(27)}</div><div><b class="wordmark" aria-label="Penny">penny</b><small>${trh('shell.tagline')}</small></div></div>${NAV.map(([k,i,l,c],n)=>`<div class="nav" data-nav="${k}" role="button" tabindex="0" title="${trh(l)}${n<9?' (Alt+'+(n+1)+')':n===NAV.length-1?' (Alt+0)':''}"><span class="sq" style="--c:${c}">${icon(i,17,2)}</span><span>${trh(l)}</span>${k==='bills'?'<span class="badge" style="display:none"></span>':''}${k==='plan'&&MONETIZATION.enabled&&!isPro()?'<span class="protag">PRO</span>':''}</div>`).join('')}<div class="spacer"></div><div class="side-foot" id="sf" data-go="settings"></div>`;
+  $('#side').innerHTML=`<div class="brand"><div class="logo">${LOGO_SVG(27)}</div><div><b class="wordmark" aria-label="Penny">penny</b><small>${trh('shell.tagline')}</small></div></div>${(()=>{const item=([k,i,l,c],n)=>`<div class="nav" data-nav="${k}" role="button" tabindex="0" title="${trh(l)}${n<9?' (Alt+'+(n+1)+')':n===NAV.length-1?' (Alt+0)':''}"><span class="sq" style="--c:${c}">${icon(i,17,2)}</span><span>${trh(l)}</span>${['bills','reminders','insights'].includes(k)?'<span class="badge" style="display:none"></span>':''}${k==='plan'&&MONETIZATION.enabled&&!isPro()?'<span class="protag">PRO</span>':''}</div>`;
+    return NAV_GROUPS.map(([gk,keys])=>`<div class="nav-group" role="group"${gk?` aria-label="${trh('navg.'+gk)}"`:''}>${gk?`<div class="nav-label" aria-hidden="true">${trh('navg.'+gk)}</div>`:''}${keys.map(k=>{const n=NAV.findIndex(x=>x[0]===k);return item(NAV[n],n);}).join('')}</div>`).join('')+`<div class="spacer"></div>${communityCard()}<div class="nav-group nav-bottom">${item(NAV[NAV.length-1],NAV.length-1)}</div>`;})()}<div class="side-foot" id="sf" data-go="settings"></div>`;
   $('#top').innerHTML=`<div class="inline-title" id="ttl"></div><div class="search" id="srch" role="button" tabindex="0">${icon('search',16)}<span>${trh('shell.search')}</span><kbd>Ctrl K</kbd></div><button class="icon-btn" id="privbtn" title="${trh('shell.privacyTitle')}" aria-label="${trh('shell.privacyAria')}"></button><button class="upd-pill" id="updbtn" style="display:none"></button><button class="btn pri" data-act="add">${icon('plus',17,2.4)}${trh('shell.new')}</button>`;
   $('#side').onclick=e=>{const n=e.target.closest('[data-nav]');if(n)go(n.dataset.nav);else if(e.target.closest('[data-go]'))go('settings');};
   $('#side').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){const n=e.target.closest('[data-nav]');if(n){e.preventDefault();go(n.dataset.nav);}}};
   $('#srch').onclick=()=>openCmd();$('#privbtn').onclick=togglePriv;$('#updbtn').onclick=openUpdateSheet;if(hasNative&&native.updGet)native.updGet().then(onUpdate).catch(()=>{});
   $('#top').onclick=e=>{const a=e.target.closest('[data-act]');if(a)act(a.dataset.act);};
   $('#view').onscroll=e=>$('#top').classList.toggle('scrolled',e.target.scrollTop>46);
-  updateSideFoot();updatePrivBtn();
+  mountNavShell();updateSideFoot();updatePrivBtn();
 }
 function go(p){if(p==='settings'&&cur!=='settings'&&setPhone())SET_CAT=null;   /* phones open Settings at the category list */
   const v=$('#view'),same=p===cur;if(!same&&cur)SCROLL_MEM[cur]=v.scrollTop;
@@ -68,10 +69,10 @@ function countUp(root){
   $$('.kpi .mid .amt[data-v],.hero .amt[data-v],.big .amt[data-v]',root).forEach(el=>{const to=+el.dataset.v;if(!isFinite(to)||Math.abs(to)<1)return;const t0=performance.now(),D=750;
     const step=t=>{const k=Math.min(1,(t-t0)/D),e=1-Math.pow(1-k,3);el.textContent=money(to*e);if(k<1)requestAnimationFrame(step);else el.textContent=money(to);};requestAnimationFrame(step);});
 }
-function render(){const v=$('#view');v.innerHTML=PAGES[cur].render();$$('.grid > *',v).forEach((el,i)=>el.style.setProperty('--i',Math.min(i,9)));PAGES[cur].after&&PAGES[cur].after(v);updateBadge();}
+function render(){const v=$('#view');v.innerHTML=PAGES[cur].render();$$('.grid > *',v).forEach((el,i)=>el.style.setProperty('--i',Math.min(i,9)));PAGES[cur].after&&PAGES[cur].after(v);updateBadge();pageEnhance();}
 /* after a change: update the page in place (motion.js) so nothing flashes; full rebuild only if that fails */
 function refresh(){const v=$('#view'),st=v.scrollTop;updateSideFoot();
-  try{morphView(v,PAGES[cur].render());$$('.grid > *',v).forEach((el,i)=>el.style.setProperty('--i',Math.min(i,9)));PAGES[cur].after&&PAGES[cur].after(v);updateBadge();}
+  try{morphView(v,PAGES[cur].render());$$('.grid > *',v).forEach((el,i)=>el.style.setProperty('--i',Math.min(i,9)));PAGES[cur].after&&PAGES[cur].after(v);updateBadge();pageEnhance();}
   catch(e){logErr('in-place refresh failed, rebuilding',e);render();}
   v.scrollTop=st;}
 window.addEventListener('resize',debounce(()=>{if(S&&['dashboard','accounts','insights'].includes(cur))refresh();},200));
@@ -115,6 +116,7 @@ function openCmd(prefill=''){
     {i:icon('plus',15,2.4),c:'#30D158',t:tr('cmd.addIncome'),g:tr('cmd.groupActions'),run:()=>openTx(null,{type:'income'})},
     {i:icon('bell',15),c:'#FF453A',t:tr('cmd.newReminder'),g:tr('cmd.groupActions'),run:()=>openReminder()},
     {i:icon('sparkles',15),c:'#0A7F66',t:tr('tour.row'),g:tr('cmd.groupActions'),run:()=>startTour()},{i:icon('info',15),c:'#0A7F66',t:tr('cmd.showGuide'),g:tr('cmd.groupActions'),run:()=>openGuide()},
+    ...(hasCommunity()?[{i:icon('chat',15),c:'#C9632F',t:tr('cm.join'),g:tr('cmd.groupActions'),run:joinCommunity}]:[]),
     {i:icon('star',15),c:'#D98A4E',t:tr('cmd.pro'),g:tr('cmd.groupActions'),run:()=>openUpgrade()},
     {i:icon('eyeoff',15),c:'#5E5CE6',t:tr('cmd.togglePrivacy'),h:'P',g:tr('cmd.groupActions'),run:togglePriv},
     {i:icon('palette',15),c:'#5E5CE6',t:tr('cmd.switchTheme'),g:tr('cmd.groupActions'),run:()=>{S.settings.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';applySettings();save();if(cur==='settings')refresh();}},

@@ -56,6 +56,7 @@ function openTx(tx,preset){
   const edit=!!tx;
   let t=tx?{...tx}:{type:'expense',date:today(),accountId:S.settings.lastAcc&&acc(S.settings.lastAcc)?S.settings.lastAcc:S.accounts[0].id,amount:'',merchant:'',note:'',category:null,...(preset||{})};
   let manualCat=edit;
+  const files=(t.files||[]).map(f=>({...f}));   // attachments while the sheet is open (save handler reads this)
   let splits=null;   // split parts while the sheet is open (shared by the form and the save handler)
   const merchants=[...new Set(S.transactions.map(x=>x.merchant).filter(Boolean))].slice(-100);
   /* one-tap repeats: your most frequent recent payees, with their usual category, account and last amount */
@@ -75,8 +76,10 @@ function openTx(tx,preset){
        <div class="fr"><label>${trh('common.date')}</label><input id="date" type="date" value="${t.date}"></div></div>
     <div class="fg"><div class="fr"><label>${trh('tx.note')}</label><input id="note" value="${esc(t.note||'')}" placeholder="${trh('common.optional')}"></div>
       <div class="fr" id="repw"><label>${trh('tx.repeat')}</label><select id="rep">${['never','weekly','biweekly','monthly','quarterly','yearly'].map(k=>opt(k,tr('tx.rep.'+k),k==='never')).join('')}</select></div></div>
+    ${attSection(t.files)}
     ${edit?`<div class="fg"><div class="fr dest" id="del">${trh('tx.delete')}</div></div>`:''}`,
    mount:s=>{
+    wireAttach(s,files);
     splits=(t.splits&&t.splits.length)?t.splits.map(x=>({category:x.category,amount:x.amount})):null;
     const catOpts=(type,sel)=>S.categories.filter(c=>c.type===type).map(c=>opt(c.id,c.name,c.id===sel)).join('');
     const curType=()=>t.type==='income'?'income':'expense';
@@ -122,7 +125,7 @@ function openTx(tx,preset){
    },
    onOk:async s=>{
       const a=parseFloat($('#amt',s).value);if(!(a>0)){toast(tr('tx.err.amount'));$('#amt',s).focus();return;}
-      const n={id:t.id||uid(),billId:t.billId,date:$('#date',s).value||today(),amount:Math.round(a*100)/100,type:t.type,accountId:$('#acc',s).value,merchant:$('#mer',s).value.trim(),note:$('#note',s).value.trim()};
+      const n={id:t.id||uid(),billId:t.billId,date:$('#date',s).value||today(),amount:Math.round(a*100)/100,type:t.type,accountId:$('#acc',s).value,merchant:$('#mer',s).value.trim(),note:$('#note',s).value.trim()};if(files.length)n.files=files.slice(0,30);
       if(t.fitid)n.fitid=t.fitid;
       if(t.type==='transfer'){n.toAccountId=$('#to',s).value;if(n.toAccountId===n.accountId){toast(tr('tx.err.sameAccount'));return;}
         const ta=parseFloat($('#tam',s).value);if($('#tamw',s).style.display!=='none'&&ta>0)n.toAmount=Math.round(ta*100)/100;}

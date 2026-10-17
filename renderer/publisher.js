@@ -17,7 +17,7 @@
     supportUrl: 'https://github.com/abdallhhelles/penny/issues', // e.g. https://akrot.example/penny/support   (https only)
     supportDiscord: 'akrott',         // Discord username for support and privacy requests (provided by the publisher)
     updateRepo: 'abdallhhelles/penny',                 // GitHub repository that hosts the signed update files, as owner/name (e.g. akrot/penny). The repo's Releases must be public. Penny then checks https://github.com/<owner>/<name>/releases/latest/download/latest.json
-    discordInvite: '',                // Discord server invite, https only (e.g. https://discord.gg/xxxx). Paste it here when the server exists; About then shows an Open button.
+    discordInvite: 'https://discord.gg/r5kNGC6p29',                // Discord server invite, https only (e.g. https://discord.gg/xxxx). Paste it here when the server exists; About then shows an Open button.
     supportEmail: '',                 // support + privacy requests, e.g. privacy@akrot.example
     website: 'https://github.com/abdallhhelles/penny',            // optional, https only
     postalAddress: '',                // registered address of the controller (needed for GDPR-style notices)

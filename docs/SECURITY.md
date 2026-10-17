@@ -34,3 +34,6 @@ Use **Settings › Data & backups › Export** with *Protect with a password* on
 
 ## Reporting a vulnerability
 Please open a private report through GitHub (Security › Report a vulnerability) or contact the publisher on Discord (`akrott`). Don't post details publicly until a fix ships.
+
+## Attachments
+Receipts and files attached to transactions are stored in the `attachments` folder next to your data, one file each, encrypted with the same key as your data (AES-256-GCM). Only images, PDFs and office/text documents are accepted, so nothing runnable is stored. Opening a non-image file decrypts a temporary copy into a private temp folder for your usual app; that folder is emptied when Penny starts and quits. Files no transaction refers to are deleted after 30 days. JSON exports and backups contain the references, not the files themselves.
