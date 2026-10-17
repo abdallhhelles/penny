@@ -72,7 +72,7 @@ function refreshUpdSheet(){const s=$('#modal .upd-sheet');if(s)wireUpdSheet(s);}
 function updCardHtml(){
   const u=UPD,ready=u.status==='ready',busy=updBusy(u);
   return`<div class="upd-card ${ready?'ready':''}"><div class="upd-mini">${icon(ready?'rocket':'download',22,2)}</div>
-    <div class="grow"><b>Penny ${esc(BRAND.version)}</b><small id="upd_stat">${esc(updLabel(u))}${u.status==='downloading'?` · ${updPct(u)}%`:''}</small>
+    <div class="grow"><b>Penny ${esc(BRAND.version)}${BRAND.channel?' '+esc(BRAND.channel):''}</b><small id="upd_stat">${esc(updLabel(u))}${u.status==='downloading'?` · ${updPct(u)}%`:''}</small>
       <small class="faint">${esc(updSourceText(u))} · ${esc(tr('updx.checked',{when:updAgo(u.checkedAt)}))}</small></div>
     <div class="btns-inline"><button class="btn sm" id="upd_check" ${busy?'disabled':''}>${trh('set.checkNow')}</button><button class="btn sm ${ready?'pri':''}" id="upd_open">${trh(ready?'upd.restart':'updx.details')}</button></div></div>`;
 }
