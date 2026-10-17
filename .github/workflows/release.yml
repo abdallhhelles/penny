@@ -10,6 +10,8 @@ name: Release
 on:
   push:
     tags: ['v*.*.*']
+  release:
+    types: [published]      # also runs when you publish a release on github.com with a new v1.2.3 tag
   workflow_dispatch:
 permissions:
   contents: write
@@ -37,8 +39,10 @@ jobs:
         run: |
           VER=$(node -p "require('./package.json').version")
           echo "ver=$VER" >> "$GITHUB_OUTPUT"
-          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "v$VER" != "${GITHUB_REF_NAME}" ]; then
-            echo "::error::Tag ${GITHUB_REF_NAME} does not match package.json version $VER"; exit 1
+          REF="${GITHUB_REF_NAME}"
+          if [ "${GITHUB_EVENT_NAME}" = "release" ]; then REF="${{ github.event.release.tag_name }}"; fi
+          if [ "${GITHUB_EVENT_NAME}" != "workflow_dispatch" ] && [ "v$VER" != "$REF" ]; then
+            echo "::error::Tag $REF does not match package.json version $VER (use the tag v$VER)"; exit 1
           fi
       - name: Build and sign the update
         env:

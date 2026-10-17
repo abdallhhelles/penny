@@ -1,5 +1,6 @@
-# Penny 1.9.0
+# Penny 1.9.0 Beta
 
+- **First public beta.** Thanks for trying Penny early. Please report anything odd on GitHub Issues or Discord (akrott).
 - **Your data is now encrypted.** Everything Penny saves, including every backup, is encrypted with AES-256 and locked to your Windows account. Nothing to set up.
 - **Passcode = second lock.** Set a passcode and it also encrypts your data. You get a one-time recovery key in case you forget it or move to a new PC.
 - **A guided tour for new users** that points at the real buttons, one by one. Replay it any time from Settings or Ctrl K.
