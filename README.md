@@ -10,7 +10,7 @@
 - **Encrypted.** Your data and every backup are encrypted with AES-256, locked to your Windows account; add a passcode for a second lock with a recovery key. See [docs/SECURITY.md](docs/SECURITY.md).
 - **Fast to use.** Type "coffee 4.50 yesterday" and Penny fills in the rest. Ask "how much did I spend on food last month?" with Ctrl K.
 - **Honest guidance.** A Financial Health Report built on published research (World Bank, OECD, Vanguard, Morningstar and more), with country-specific rules marked, a debt payoff planner, and a one-click PDF.
-- **For everyone.** English, Spanish and Arabic (right-to-left), any currency, local number and date formats, keyboard and screen-reader friendly. New users get a guided tour.
+- **For everyone.** Fully translated into English, Chinese (Simplified), Hindi, Spanish and Arabic (right-to-left), including the installer, the legal texts and natural-language entry; any currency, local number and date formats, keyboard and screen-reader friendly. New users get a guided tour.
 
 ## Features
 Overview dashboard · transactions with natural-language entry · receipts and files on transactions (encrypted) · right-click menus · bank statement import (CSV, OFX) with duplicate detection · accounts, credit cards and loans · budgets with auto-suggest · safe-to-spend today · goals · bills and subscriptions · reminders with Windows notifications · calendar · insights · Financial Health Report · planner · rules · multi-currency · privacy blur (P) · passcode lock and encryption · automatic, validated backups · encrypted export · signed in-app updates from GitHub Releases.

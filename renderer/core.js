@@ -396,10 +396,32 @@ function lastMonthsAvgByCat(n=3){
 /* category suggestion: your rules -> what you filed before -> built-in keywords (see rules-engine.js) */
 function suggestCtx(){return {rules:S.rules||[],categories:S.categories,learnIndex:RulesEngine.buildLearn(S.transactions,id=>RulesEngine.isFallbackCat(S.categories.find(c=>c.id===id)))};}
 function guessCategory(text,type,extra){return RulesEngine.suggest(suggestCtx(),{merchant:text,type,...(extra||{})}).id;}
+/* Smart entry understands the five bundled languages: their words for dates, "at" and income are mapped onto the English
+   ones below, local digits become 0-9, and a decimal comma ("4,50") is read as a decimal point. */
+const SMART_SYN=[
+ [/前天|परसों|anteayer|أول أمس/g,' 2 days ago '],[/昨天|昨日|बीता कल|ayer|أمس|البارحة/g,' yesterday '],[/(^|\s)कल(?=\s)/g,'$1 yesterday '],[/今天|今日|आज|hoy|اليوم/g,' today '],
+ [/(\d+)\s*天前/g,' $1 days ago '],[/(\d+)\s*दिन\s*पहले/g,' $1 days ago '],[/hace\s+(\d+)\s+d[ií]as?/gi,' $1 days ago '],[/قبل\s+(\d+)\s+(?:أيام|يوم|يومًا)/g,' $1 days ago '],
+ [/(?:上)?(?:周|星期|礼拜)一/g,' mon '],[/(?:上)?(?:周|星期|礼拜)二/g,' tue '],[/(?:上)?(?:周|星期|礼拜)三/g,' wed '],[/(?:上)?(?:周|星期|礼拜)四/g,' thu '],[/(?:上)?(?:周|星期|礼拜)五/g,' fri '],[/(?:上)?(?:周|星期|礼拜)六/g,' sat '],[/(?:上)?(?:周|星期|礼拜)[日天]/g,' sun '],
+ [/सोमवार/g,' mon '],[/मंगलवार/g,' tue '],[/बुधवार/g,' wed '],[/गुरुवार|बृहस्पतिवार/g,' thu '],[/शुक्रवार/g,' fri '],[/शनिवार/g,' sat '],[/रविवार/g,' sun '],
+ [/\b(?:el\s+)?lunes\b/gi,' mon '],[/\b(?:el\s+)?martes\b/gi,' tue '],[/\b(?:el\s+)?mi[ée]rcoles\b/gi,' wed '],[/\b(?:el\s+)?jueves\b/gi,' thu '],[/\b(?:el\s+)?viernes\b/gi,' fri '],[/\b(?:el\s+)?s[áa]bado\b/gi,' sat '],[/\b(?:el\s+)?domingo\b/gi,' sun '],
+ [/(?:يوم\s+)?الاثنين/g,' mon '],[/(?:يوم\s+)?الثلاثاء/g,' tue '],[/(?:يوم\s+)?الأربعاء/g,' wed '],[/(?:يوم\s+)?الخميس/g,' thu '],[/(?:يوم\s+)?الجمعة/g,' fri '],[/(?:يوم\s+)?السبت/g,' sat '],[/(?:يوم\s+)?الأحد/g,' sun '],
+ [/工资|薪水|收入|退款|आय|वेतन|तनख़्वाह|तनख्वाह|रिफ़ंड|sueldo|salario|n[óo]mina|ingreso|reembolso|راتب|دخل|استرداد/gi,' income '],
+ [/(?:^|\s)在/g,' at '],[/\s(?:en)\s/gi,' at '],[/\s(?:في|من|لدى|عند)\s/g,' at ']
+];
+const LOCAL_DIGITS=/[٠-٩۰-۹०-९]/g;
+const toAsciiDigits=s=>s.replace(LOCAL_DIGITS,d=>{const c=d.charCodeAt(0);return String(c>=0x966?c-0x966:c>=0x6F0?c-0x6F0:c-0x660);}).replace(/(\d)[٫](\d)/g,'$1.$2').replace(/[٬]/g,',');
+function smartNormalize(str){
+  let s=' '+toAsciiDigits(str)+' ';
+  s=s.replace(/(\d),(\d{1,2})(?!\d)/g,'$1.$2');                           // 4,50 -> 4.50 (a thousands comma has 3 digits after it)
+  s=s.replace(/^(.*?)(\S+)\s+(?:पर|से|में)\s+(.*)$/,'$1$3 at $2');          // Hindi postposition: "स्टारबक्स पर कॉफ़ी" -> "कॉफ़ी at स्टारबक्स"
+  for(const [re,to] of SMART_SYN)s=s.replace(re,to);
+  return s;
+}
 function parseSmart(str){
-  let s=' '+str.trim()+' ';if(!str.trim())return null;
+  if(!str||!str.trim())return null;
+  let s=smartNormalize(str.trim());
   const r={type:'expense',date:today()};
-  const num=s.match(/([+\-]?)\s*[$€£]?\s*(\d[\d,]*(?:\.\d+)?)/);
+  const num=s.match(/([+\-]?)\s*[$€£¥₹]?\s*(\d[\d,]*(?:\.\d+)?)/);
   if(num){r.amount=parseFloat(num[2].replace(/,/g,''));if(num[1]==='+')r.type='income';s=s.replace(num[0],' ');}
   const dm=s.match(/\b(\d{4}-\d{2}-\d{2})\b/);
   if(dm){r.date=dm[1];s=s.replace(dm[0],' ');}

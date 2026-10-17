@@ -1,5 +1,7 @@
 'use strict';
 const NS='http://www.w3.org/2000/svg';
+/* width of chart label text in the page's font (12px), so long compact numbers ("$25.7 हज़ार", "25,7 mil US$") are never cut off */
+let _tw=null;function textW(t,el){try{if(!_tw)_tw=document.createElement('canvas').getContext('2d');_tw.font='12px '+getComputedStyle(el||document.body).fontFamily;return _tw.measureText(String(t)).width;}catch{return String(t).length*7;}}
 function tipEl(el){let t=$('.tip',el);if(!t){t=document.createElement('div');t.className='tip';el.appendChild(t);}return t;}
 
 /* area / line chart — axis labels on the right, Apple-Health style */
@@ -9,6 +11,7 @@ function drawArea(el,pts,o={}){
   const ys=pts.map(p=>p.y).concat(o.band?o.band.lo.map(p=>p.y).concat(o.band.hi.map(p=>p.y)):[]);let min=Math.min(...ys),max=Math.max(...ys);
   if(o.zero){min=Math.min(min,0);max=Math.max(max,0);}
   if(min===max){min-=1;max+=1;}const pr=(max-min)*.14;min-=pr;max+=pr;
+  m.r=Math.max(64,Math.min(140,Math.ceil(Math.max(...[0,1,2,3].map(i=>textW(moneyC(min+(max-min)*i/3),el))))+14));   // room for the longest axis label in this language
   const n=pts.length,X=i=>m.l+i*(w-m.l-m.r)/Math.max(1,n-1),Y=v=>m.t+(1-(v-min)/(max-min))*(h-m.t-m.b);
   let d='';pts.forEach((p,i)=>{const x=X(i),y=Y(p.y);if(!i)d+=`M${x.toFixed(1)},${y.toFixed(1)}`;else{const px=X(i-1),py=Y(pts[i-1].y),cx=(px+x)/2;d+=`C${cx.toFixed(1)},${py.toFixed(1)} ${cx.toFixed(1)},${y.toFixed(1)} ${x.toFixed(1)},${y.toFixed(1)}`;}});
   const col=o.color||'var(--accent)',id='g'+uid();
@@ -32,15 +35,16 @@ function drawDonut(el,slices,o={}){
   const size=o.size||190,sw=o.sw||20,r=size/2-sw,C=2*Math.PI*r,total=sum(slices,s=>s.value)||1;
   let off=0,arcs='';const gap=slices.length>1?4:0;
   slices.forEach((s,i)=>{const len=s.value/total*C;const dl=Math.max(0.5,len-gap);arcs+=`<circle data-i="${i}" cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${dl} ${C-dl}" stroke-dashoffset="${-off-gap/2}" transform="rotate(-90 ${size/2} ${size/2})" style="transition:stroke-width .2s;cursor:pointer"/>`;off+=len;});
-  el.innerHTML=`<div class="ring-wrap" style="width:${size}px;height:${size}px"><svg width="${size}" height="${size}"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--fill)" stroke-width="${sw}"/>${arcs}</svg><div class="c"><div class="faint" style="font-size:13px" id="dl">${esc(o.label||'Total')}</div><div class="mid amt" id="dv">${money(total)}</div></div></div>`;
+  el.innerHTML=`<div class="ring-wrap" style="width:${size}px;height:${size}px"><svg width="${size}" height="${size}"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--fill)" stroke-width="${sw}"/>${arcs}</svg><div class="c"><div class="faint" style="font-size:13px" id="dl">${esc(o.label||tr('chart.total'))}</div><div class="mid amt" id="dv">${money(total)}</div></div></div>`;
   $$('circle[data-i]',el).forEach(c=>{const s=slices[c.dataset.i];
     c.onmouseenter=()=>{c.setAttribute('stroke-width',sw+6);$('#dl',el).textContent=s.label;$('#dv',el).textContent=money(s.value);};
-    c.onmouseleave=()=>{c.setAttribute('stroke-width',sw);$('#dl',el).textContent=o.label||'Total';$('#dv',el).textContent=money(total);};});
+    c.onmouseleave=()=>{c.setAttribute('stroke-width',sw);$('#dl',el).textContent=o.label||tr('chart.total');$('#dv',el).textContent=money(total);};});
 }
 
 function drawBars(el,groups,series,o={}){
   const w=el.clientWidth||600,h=o.h||220,m={l:6,r:54,t:12,b:26};
   const max=Math.max(1,...groups.flatMap(g=>series.map(s=>g[s.key]||0)))*1.1;
+  m.r=Math.max(54,Math.min(140,Math.ceil(Math.max(...[0,1,2,3].map(i=>textW(moneyC(max*i/3),el))))+16));
   const gw=(w-m.l-m.r)/groups.length,bw=Math.min(22,gw/(series.length+1.2));
   const Y=v=>m.t+(1-v/max)*(h-m.t-m.b);let s='';
   for(let i=0;i<4;i++){const v=max*i/3,y=Y(v);s+=`<line x1="${m.l}" x2="${w-m.r}" y1="${y}" y2="${y}" stroke="var(--line-2)" stroke-dasharray="2 5"/><text x="${w-m.r+10}" y="${y+4}">${moneyC(v)}</text>`;}

@@ -2110,6 +2110,18 @@
   "legal.c.website": "Website",
   "legal.c.address": "Address",
   "about.showEnglish": "Show the English (binding) text",
-  "about.showTranslated": "Show the translation"
+  "about.showTranslated": "Show the translation",
+  "rp.src.fhn": "Financial Health Network, FinHealth Score framework and Pulse 2025",
+  "rp.src.findex": "World Bank, Global Findex Database 2025: financial health and resilience in 141 economies",
+  "rp.src.oecd": "OECD/INFE 2023 International Survey of Adult Financial Literacy (39 countries): resilience and well-being",
+  "rp.src.fid": "Fidelity, how much to save for retirement: at least 15% of pre-tax income",
+  "rp.src.van": "Vanguard, emergency savings and financial well-being (12,400 investors)",
+  "rp.src.jpm": "JPMorgan Chase Institute, about 6 weeks of take-home pay as a buffer (via HerMoney, 2019)",
+  "rp.src.ms": "Morningstar, safe starting withdrawal rate for 2026: 3.9% (30 years, 90% success)",
+  "rp.src.bg": "The 4% rule (Bengen 1994, Trinity study 1998)",
+  "rp.src.gm": "Gal and McShane (2012), Journal of Marketing Research: concentrating on one debt at a time and progress",
+  "rp.src.cfpb": "CFPB, Measuring financial well-being (scale and user guide)",
+  "rp.src.wt": "Warren and Tyagi, All Your Worth (2005): the 50/30/20 split",
+  "chart.total": "Total"
  }
 }

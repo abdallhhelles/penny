@@ -21,6 +21,7 @@ const RSRC={
 };
 const RT={good:'good',ok:'warn',warn:'warn',bad:'bad'};
 const srcN=k=>Object.keys(RSRC).indexOf(k)+1;
+const srcT=k=>{const key='rp.src.'+k;return I18N.exists(key)?tr(key):RSRC[k].t;};   // titles translated, names of authors and publications kept
 /* where the user is, for country-specific rules. Region from the formats locale (en-GB -> GB), else the currency. */
 function reportRegion(){
   const loc=String(S.settings.locale||'').split('-')[1]||'',cur=baseCur();
@@ -77,7 +78,7 @@ function pillars(R){
 const pct1=v=>FMT.number(+(v*100).toFixed(1))+'%';
 const rLabel=s=>tr(s==null?'rp.lbl.none':s>=80?'rp.lbl.strong':s>=60?'rp.lbl.solid':s>=40?'rp.lbl.building':'rp.lbl.attention');
 const rTone=s=>s==null?'':s>=80?'good':s>=60?'good':s>=40?'warn':'bad';
-const srcTag=k=>k?` <span class="rsrc" title="${esc(RSRC[k].t)}">[${srcN(k)}]</span>`:'';
+const srcTag=k=>k?` <span class="rsrc" title="${esc(srcT(k))}">[${srcN(k)}]</span>`:'';
 function metric(label,value,tone,bench,srcKey,note){
   return`<div class="rr"><div class="row sm" style="margin-bottom:4px"><span>${esc(label)}</span><b class="amt ${tone||''}" dir="auto">${esc(value)}</b></div>
    <div class="faint sm">${esc(bench)}${Array.isArray(srcKey)?srcKey.map(srcTag).join(''):srcTag(srcKey)}</div>${note?`<div class="sm" style="margin-top:4px">${esc(note)}</div>`:''}</div>`;
@@ -196,7 +197,7 @@ function rpMethod(R,P){
   return`<details class="card glass rp-method"><summary>${trh('rp.methodTitle')}</summary>
    <p class="sm">${trh('rp.pillarsBody')} ${P.n<4?trh('rp.pillarsMissing'):''} ${esc(tr('rp.region',{cur:R.cur}))}${R.region.us?'':' · '+esc(tr('rp.regionIntl'))}</p>
    <p class="sm">${trh('rp.howToRead')}</p>
-   <ol class="sm rp-src" dir="ltr">${Object.values(RSRC).map(s=>`<li>${s.u?`<a class="link" data-ext="${esc(s.u)}" role="link" tabindex="0">${esc(s.t)}</a>`:esc(s.t)}</li>`).join('')}</ol></details>`;
+   <ol class="sm rp-src">${Object.entries(RSRC).map(([k,s])=>`<li>${s.u?`<a class="link" data-ext="${esc(s.u)}" role="link" tabindex="0">${esc(srcT(k))}</a>`:esc(srcT(k))}</li>`).join('')}</ol></details>`;
 }
 function reportBody(R){
   const P=pillars(R);

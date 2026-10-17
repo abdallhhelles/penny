@@ -1451,3 +1451,13 @@ body.printing .rp-table{font-size:12px}body.printing .rp-table td,body.printing 
 #view{overflow-x:hidden}
 .rp-table td.rp-c-area{overflow-wrap:normal;white-space:nowrap}
 .rp-disclaimer{margin:12px 6px 0;line-height:1.5}
+/* (1.11) script fallbacks for the bundled languages: Windows' own UI fonts for Chinese and Hindi, so text never drops to
+   a random fallback. Latin letters and digits keep using Segoe UI / Sora. */
+html[lang^="zh"]{--font:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI","Microsoft YaHei","PingFang SC","Noto Sans CJK SC","Noto Sans SC",system-ui,sans-serif;
+  --font-brand:"Sora","Segoe UI","Microsoft YaHei UI","Microsoft YaHei","PingFang SC","Noto Sans CJK SC",system-ui,sans-serif}
+html[lang^="hi"]{--font:"Segoe UI Variable Text","Segoe UI","Nirmala UI","Nirmala Text","Noto Sans Devanagari","Mangal",system-ui,sans-serif;
+  --font-brand:"Sora","Segoe UI","Nirmala UI","Noto Sans Devanagari",system-ui,sans-serif}
+html[lang^="hi"] body{line-height:1.45}
+.legal.tx{font-family:var(--font);font-size:13.5px;line-height:1.75}
+/* chart labels are laid out in chart coordinates (not mirrored), so they always run left to right; their own words still read correctly */
+svg text{direction:ltr;unicode-bidi:plaintext}

@@ -12,6 +12,14 @@ app.setName('Penny');
 app.setAppUserModelId(APP_ID);
 app.setPath('userData', path.join(app.getPath('appData'), 'Penny'));
 const dataDir = () => app.getPath('userData');
+/* (1.11) Chromium's own UI language (date pickers, spell-check, built-in error pages) follows the language chosen in Penny.
+   It can only be set before startup, so a language change reaches these controls on the next launch. 'auto' leaves it to Windows. */
+try {
+  const pref = String(JSON.parse(fs.readFileSync(path.join(dataDir(), 'system.json'), 'utf8')).lang || 'auto');
+  const CHROMIUM = { en: 'en-US', zh: 'zh-CN', hi: 'hi', es: 'es', ar: 'ar' };
+  const base = pref.split(/[-_]/)[0].toLowerCase();
+  if (pref !== 'auto' && CHROMIUM[base]) app.commandLine.appendSwitch('lang', /^zh[-_](TW|HK|Hant)/i.test(pref) ? 'zh-TW' : CHROMIUM[base]);
+} catch {}
 const dataFile = () => path.join(dataDir(), 'penny-data.json');
 const sysFile = () => path.join(dataDir(), 'system.json');
 const licFile = () => path.join(dataDir(), 'license.json');

@@ -58,3 +58,23 @@ test('categories: Penny’s own names follow the language, renamed ones stay', (
   assert.equal(C.run("S.categories.find(c=>c.id==='c_groceries').name"), 'Groceries');
   assert.equal(C.run("Finance.bucketOf({id:'c_groceries',name:'杂货'})"), 'needs', 'logic uses the stable id');
 });
+
+test('smart entry: one-line expenses in five languages', () => {
+  const p = q => C.run(`parseSmart(${JSON.stringify(q)})`);
+  let r = p('coffee 4.5 at starbucks yesterday'); assert.equal(r.amount, 4.5); assert.equal(r.date, day(-1)); assert.equal(r.merchant, 'Starbucks');
+  r = p('昨天在星巴克咖啡 4.5'); assert.equal(r.amount, 4.5); assert.equal(r.date, day(-1)); assert.ok(/星巴克/.test(r.merchant), r.merchant);
+  r = p('कल स्टारबक्स पर कॉफ़ी 4.5'); assert.equal(r.amount, 4.5); assert.equal(r.date, day(-1)); assert.equal(r.merchant, 'स्टारबक्स');
+  r = p('café 4,50 en starbucks ayer'); assert.equal(r.amount, 4.5); assert.equal(r.date, day(-1)); assert.equal(r.merchant, 'Starbucks');
+  r = p('قهوة ٤٫٥ في ستاربكس أمس'); assert.equal(r.amount, 4.5); assert.equal(r.date, day(-1)); assert.equal(r.merchant, 'ستاربكس');
+  r = p('工资 3000'); assert.equal(r.type, 'income'); assert.equal(r.amount, 3000);
+  r = p('rent 1,250 3 days ago'); assert.equal(r.amount, 1250); assert.equal(r.date, day(-3));
+});
+
+test('the example phrases shown in each language are understood', () => {
+  for (const l of ['en', 'zh', 'hi', 'es', 'ar']) {
+    C.run(`I18N.setLanguage(${JSON.stringify(l)})`);
+    const ph = C.run("tr('rem.quickPh')"), q = ph.slice(ph.search(/[:：]/) + 1).trim();
+    const r = rem(q); assert.equal(r.time, '09:00', `${l}: ${q}`); assert.equal(r.repeat, 'monthly', `${l}: ${q}`); assert.equal(r.kind, 'rent', `${l}: ${q}`);
+  }
+  C.run("I18N.setLanguage('en')");
+});
