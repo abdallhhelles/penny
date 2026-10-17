@@ -27,9 +27,23 @@ async function loadLicense(){
 }
 /* Run fn if the feature is available, otherwise show the upgrade sheet. */
 function gate(id,fn){if(can(id)){fn&&fn();return true;}openUpgrade(id);return false;}
-function planBadge(){return isPro()?(MONETIZATION.enabled?'<span class="pill pro">PRO</span>':'<span class="pill pro">EARLY ACCESS</span>'):'<span class="pill">FREE</span>';}
+const proSoon=()=>!MONETIZATION.enabled;   // no paid plan yet: Pro is shown as "coming soon" and everything stays free
+function planBadge(){return proSoon()?`<span class="pill pro soon">${trh('pro.soonBadge')}</span>`:isPro()?'<span class="pill pro">PRO</span>':'<span class="pill">FREE</span>';}
+const PRO_SOON=[['bolt','pro.f.plan'],['sparkles','pro.f.insights'],['lock','pro.f.exports'],['calendar','pro.f.wrapped'],['star','pro.f.support']];
+function openProSoon(){
+  openSheet({title:tr('pro.title'),ok:null,cancel:tr('about.close'),body:`
+   <div style="text-align:center;margin:2px 0 18px"><div class="logo" style="margin:0 auto 12px;width:64px;height:64px">${LOGO_SVG(64)}</div>
+    <span class="pill pro soon">${trh('pro.soonBadge')}</span>
+    <h2 style="font-size:24px;letter-spacing:-.5px;margin:10px 0 0">${trh('pro.soonTitle')}</h2><p class="muted" style="margin:6px auto 0;max-width:380px">${trh('pro.soonSub')}</p></div>
+   <div class="sec-h" style="margin-top:0">${trh('pro.soonPlanned')}</div>
+   <div class="group" style="margin-bottom:14px">${PRO_SOON.map(([ic,k])=>`<div class="li noicon" style="min-height:54px"><div class="sq ico sm">${icon(ic,16)}</div><div class="grow"><b>${trh(k)}</b><small>${trh(k+'D')}</small></div></div>`).join('')}</div>
+   ${typeof hasCommunity==='function'&&hasCommunity()?`<button class="btn pri" id="pro_notify" style="width:100%;height:48px">${icon('chat',16,2.2)} ${trh('pro.notify')}</button>`:''}
+   <p class="faint sm" style="text-align:center;margin:12px 0 0">${trh('pro.soonNote')}</p>`,
+   mount(s){const b=$('#pro_notify',s);if(b)b.onclick=()=>{closeModal();joinCommunity();};}});
+}
 
 function openUpgrade(focus){
+  if(proSoon())return openProSoon();
   openSheet({title:'Penny Pro',ok:null,cancel:'Close',body:`
    <div style="text-align:center;margin:2px 0 18px"><div class="logo" style="margin:0 auto 12px;width:64px;height:64px;border-radius:20px">${LOGO_SVG(64)}</div>
     <h2 style="font-size:26px;letter-spacing:-.6px;margin:0">Penny Pro</h2><p class="muted" style="margin:6px 0 0">Everything in Penny, with no limits.</p></div>

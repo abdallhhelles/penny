@@ -1375,3 +1375,79 @@ html[data-theme="dark"] .ctx-i:focus .ctx-ic,html[data-theme="dark"] .ctx-i:hove
 .av-bar .btn{background:rgba(251,246,239,.12);color:#FBF6EF}.av-bar .icon-btn{color:#FBF6EF}
 .av-img{flex:1;display:grid;place-items:center;padding:12px 24px 28px;min-height:0}
 .av-img img{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px -20px rgba(0,0,0,.6)}
+html .pill.pro.soon,html[data-style="clean"] .pill.pro.soon{background:rgba(var(--accent-rgb),.14);color:var(--accent);margin-left:0}
+html[data-theme="dark"] .pill.pro.soon{color:var(--copper-300,#EE9A5C)}
+#procard .pill.pro.soon{margin-left:6px}
+/* ---------- 1.10.2 report: summary, action plan, scorecard, tables ---------- */
+.rp-page{max-width:1040px}
+.rp-sec{margin-top:6px}
+.rp-sum{padding:22px 24px}
+.rp-sum-top{display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+.rp-sum-top .grow{min-width:260px}
+.rp-eyebrow{font-size:11.5px;font-weight:650;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rp-verdict{font-family:var(--font-brand);font-size:21px;font-weight:600;letter-spacing:-.3px;line-height:1.3;margin:6px 0 12px}
+.rp-areas{display:flex;flex-wrap:wrap;gap:8px}
+.rp-area{display:inline-flex;align-items:center;gap:7px;font-size:13px;padding:5px 11px;border-radius:99px;background:var(--fill)}
+.rp-area i{width:8px;height:8px;border-radius:50%;background:var(--faint)}
+.rp-area.good i{background:var(--good,var(--green))}.rp-area.warn i{background:var(--warn,var(--yellow))}.rp-area.bad i{background:var(--bad,var(--red))}
+.rp-area b{font-variant-numeric:tabular-nums}
+.rp-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:20px}
+.rp-kpi{display:grid;gap:3px;padding:12px 14px;border-radius:12px;background:var(--fill)}
+.rp-kpi small{font-size:12px;color:var(--muted)}
+.rp-kpi b{font-family:var(--font-brand);font-size:19px;font-weight:600;letter-spacing:-.3px}
+.rp-kpi span{font-size:12px}
+@media(max-width:860px){.rp-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.rp-acts{list-style:none;margin:0;padding:0}
+.rp-act{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid var(--line)}
+.rp-act:last-child{border-bottom:none}
+.rp-n{width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:13px;font-weight:700;background:var(--accent);color:var(--on-accent)}
+.rp-act b{display:block;font-size:14.5px}
+.rp-act p{margin:3px 0 0;font-size:13.5px;line-height:1.5}
+.rp-act .btn{flex:none;align-self:center}
+.rp-tablecard{padding:6px 8px 12px}
+.rp-table{width:100%;border-collapse:collapse;font-size:13.5px}
+.rp-table th{text-align:start;font-size:11.5px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:10px 10px 8px;border-bottom:1px solid var(--line)}
+.rp-table td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+.rp-table tbody tr:last-child td{border-bottom:none}
+.rp-table td.amt{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
+.rp-table tr.rp-first:not(:first-child) td{border-top:2px solid var(--line)}
+.rp-c-area{width:118px}.rp-c-area b{display:block}.rp-c-area span{font-size:12px;font-weight:650}
+.rp-c-area .good{color:var(--good,var(--green))}.rp-c-area .warn{color:var(--warn,var(--yellow))}.rp-c-area .bad{color:var(--bad,var(--red))}
+.rp-st{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.rp-st i{width:8px;height:8px;border-radius:50%}
+.rp-st.good{color:var(--good,var(--green))}.rp-st.good i{background:var(--good,var(--green))}
+.rp-st.warn{color:var(--warn,var(--yellow))}.rp-st.warn i{background:var(--warn,var(--yellow))}
+.rp-st.bad{color:var(--bad,var(--red))}.rp-st.bad i{background:var(--bad,var(--red))}
+.rp-legend{display:flex;gap:16px;font-size:12.5px;color:var(--muted);margin:0 4px 6px}
+.rp-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:6px;vertical-align:-1px}
+.rp-chart{position:relative;min-height:200px}
+.rp-bar{display:inline-block;width:90px;height:6px;border-radius:99px;background:var(--fill-2);margin-inline-end:8px;vertical-align:middle;overflow:hidden}
+.rp-bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.rp-bs{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.rp-bs .kv{padding:7px 2px;border-bottom:1px solid var(--line);font-size:13.5px}
+.rp-sub{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:4px 2px 6px}
+.rp-sub b{font-size:14px;letter-spacing:0;text-transform:none;color:var(--text)}
+.rp-bs-foot{display:flex;flex-wrap:wrap;gap:8px 24px;margin:14px 2px 6px;font-size:13.5px;color:var(--muted)}
+.rp-bs-foot b{color:var(--text);margin-inline-start:6px}
+.rp-bs + .rp-sub,.rp-bs-foot + .rp-sub{margin-top:18px}
+@media(max-width:860px){.rp-bs{grid-template-columns:1fr}.rp-c-area{width:auto}.rp-table th:nth-child(4),.rp-table td:nth-child(4){display:none}}
+.rp-method{margin-top:18px;padding:0 18px}
+.rp-method summary{cursor:pointer;padding:14px 0;font-weight:600;list-style:none}
+.rp-method summary::-webkit-details-marker{display:none}
+.rp-method summary::after{content:'+';float:right;color:var(--faint);font-size:18px}
+.rp-method[open] summary::after{content:'−'}
+.rp-method p{color:var(--muted);line-height:1.55}
+.rp-src{margin:0 0 16px;padding-inline-start:20px;line-height:1.7}
+body.printing .rp-kpi,body.printing .rp-area{background:#f2f3f6!important}
+body.printing .rp-n{background:#16181d!important;color:#fff!important}
+body.printing .rp-sec,body.printing .rp-table tr{break-inside:avoid}
+body.printing .rp-table th:nth-child(4),body.printing .rp-table td:nth-child(4){display:table-cell!important}
+body.printing .rp-kpis{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+body.printing .rp-bs{grid-template-columns:1fr 1fr!important}
+body.printing .rp-src .link,body.printing .rp-method a{color:#16181d!important}
+body.printing .rp-table{font-size:12px}body.printing .rp-table td,body.printing .rp-table th{padding:7px 8px}
+.rp-tablecard{overflow-x:auto}
+.rp-table td{overflow-wrap:anywhere}
+#view{overflow-x:hidden}
+.rp-table td.rp-c-area{overflow-wrap:normal;white-space:nowrap}
+.rp-disclaimer{margin:12px 6px 0;line-height:1.5}

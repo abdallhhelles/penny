@@ -34,7 +34,7 @@ function aboutGroup(){
    ${row('lock','var(--green)',H('about.privacy'),H('set.privacyAboutD'),doc('privacy'))}
    ${row('list','var(--gray,#8E8E93)',H('about.eula'),'',doc('eula'))}
    ${row('grid','var(--gray,#8E8E93)',H('about.oss'),'',doc('oss'))}
-   <div class="setrow plain"><div class="grow"><small>${H('about.copyright',{year:new Date().getFullYear(),publisher:esc(P.name)})}</small></div></div>
+   <div class="setrow plain"><div class="grow"><small>${H('about.copyright',{year:String(new Date().getFullYear()),publisher:esc(P.name)})}</small></div></div>
   </div>`;
 }
 function wireAbout(v){

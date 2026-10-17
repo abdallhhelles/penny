@@ -117,7 +117,7 @@ function openCmd(prefill=''){
     {i:icon('bell',15),c:'#FF453A',t:tr('cmd.newReminder'),g:tr('cmd.groupActions'),run:()=>openReminder()},
     {i:icon('sparkles',15),c:'#0A7F66',t:tr('tour.row'),g:tr('cmd.groupActions'),run:()=>startTour()},{i:icon('info',15),c:'#0A7F66',t:tr('cmd.showGuide'),g:tr('cmd.groupActions'),run:()=>openGuide()},
     ...(hasCommunity()?[{i:icon('chat',15),c:'#C9632F',t:tr('cm.join'),g:tr('cmd.groupActions'),run:joinCommunity}]:[]),
-    {i:icon('star',15),c:'#D98A4E',t:tr('cmd.pro'),g:tr('cmd.groupActions'),run:()=>openUpgrade()},
+    {i:icon('star',15),c:'#D98A4E',t:proSoon()?tr('pro.cmdSoon'):tr('cmd.pro'),g:tr('cmd.groupActions'),run:()=>openUpgrade()},
     {i:icon('eyeoff',15),c:'#5E5CE6',t:tr('cmd.togglePrivacy'),h:'P',g:tr('cmd.groupActions'),run:togglePriv},
     {i:icon('palette',15),c:'#5E5CE6',t:tr('cmd.switchTheme'),g:tr('cmd.groupActions'),run:()=>{S.settings.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';applySettings();save();if(cur==='settings')refresh();}},
     {i:icon('lock',15),c:'#8E8E93',t:tr('cmd.lock'),h:'Ctrl L',g:tr('cmd.groupActions'),run:lockApp},{i:icon('down',15),c:'#30D158',t:tr('cmd.exportCsv'),g:tr('cmd.groupActions'),run:()=>exportCSV(S.transactions)}];

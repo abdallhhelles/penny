@@ -151,16 +151,8 @@ Section "Install" SecInstall
 
   ; ---- 5. shortcuts + uninstaller + Add/Remove Programs ----
   shortcuts:
-  ; brand the runtime: Penny's icon and name on Penny.exe, so Task Manager, Explorer and the taskbar say Penny, not Electron.
-  ; rcedit (MIT, github.com/electron/rcedit) runs from the temp folder and is not installed. Runs on every install/upgrade.
-  DetailPrint "Applying the Penny icon..."
-  InitPluginsDir
-  File "/oname=$PLUGINSDIR\rcedit.exe" "__RCEDIT__"
-  nsExec::ExecToLog '"$PLUGINSDIR\rcedit.exe" "$INSTDIR\${EXE}" --set-icon "$INSTDIR\icon.ico" --set-version-string "FileDescription" "${APP_NAME}" --set-version-string "ProductName" "${APP_NAME}" --set-version-string "CompanyName" "${PUBLISHER}" --set-version-string "InternalName" "${APP_NAME}" --set-version-string "OriginalFilename" "${EXE}" --set-version-string "LegalCopyright" "${PUBLISHER}" --set-file-version "${APP_VERSION4}" --set-product-version "${APP_VERSION4}"'
-  Pop $0
-  ${If} $0 != "0"
-    DetailPrint "Could not stamp the icon onto ${EXE} ($0). Shortcuts still show the Penny icon."
-  ${EndIf}
+  ; (1.10.1) Stamping the icon onto Penny.exe with rcedit is switched OFF while a data-key problem seen right after
+  ; running the 1.10.1 installer is investigated. Shortcuts and the Apps list still use the Penny icon.
   ; a fresh name for the shortcut icon, so Windows cannot show a cached old one after an upgrade
   Delete "$INSTDIR\penny-*.ico"
   CopyFiles /SILENT "$INSTDIR\icon.ico" "$INSTDIR\penny-v${APP_VERSION}.ico"

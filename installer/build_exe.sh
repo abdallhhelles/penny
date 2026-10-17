@@ -33,7 +33,7 @@ SUPPORT=""
 SURL=$(node -p "require('$ROOT/renderer/publisher.js').supportUrl")
 [ -n "$SURL" ] && SUPPORT="WriteRegStr HKCU \"\${UNINST_KEY}\" \"HelpLink\" \"$SURL\""
 sed -e "s#__SHA__#$SHA#" -e "s#__PLUGINS__#$PLUG#" -e "s#__OUT__#$OUT#" -e "s#__ICON__#$WORK/icon.ico#g" \
-    -e "s#__LICENSE__#$WORK/LICENSE.txt#g" -e "s#__PRIVACY__#$WORK/PRIVACY.txt#g" -e "s#__APPDIR__#$WORK/app#g" -e "s#__RCEDIT__#$WORK/rcedit.exe#g" \
+    -e "s#__LICENSE__#$WORK/LICENSE.txt#g" -e "s#__PRIVACY__#$WORK/PRIVACY.txt#g" -e "s#__APPDIR__#$WORK/app#g" \
     -e "s#__VERSION__#$VER#g" -e "s#__PUBLISHER__#$PUB#g" -e "s#__YEAR__#$YEAR#g" -e "s#__SUPPORT_REG__#$SUPPORT#" \
     installer/nsis/penny.nsi > "$WORK/penny.nsi"
 cd "$WORK"
