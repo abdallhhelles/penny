@@ -11,7 +11,7 @@ on:
   push:
     tags: ['v*.*.*']
   release:
-    types: [published]      # also runs when you publish a release on github.com with a new v1.2.3 tag
+    types: [published, edited]   # also runs when you publish (or fix) a release on github.com
   workflow_dispatch:
 permissions:
   contents: write
@@ -38,11 +38,14 @@ jobs:
         id: v
         run: |
           VER=$(node -p "require('./package.json').version")
+          TAG="${GITHUB_REF_NAME}"
+          if [ "${GITHUB_EVENT_NAME}" = "release" ]; then TAG="${{ github.event.release.tag_name }}"; fi
           echo "ver=$VER" >> "$GITHUB_OUTPUT"
-          REF="${GITHUB_REF_NAME}"
-          if [ "${GITHUB_EVENT_NAME}" = "release" ]; then REF="${{ github.event.release.tag_name }}"; fi
-          if [ "${GITHUB_EVENT_NAME}" != "workflow_dispatch" ] && [ "v$VER" != "$REF" ]; then
-            echo "::error::Tag $REF does not match package.json version $VER (use the tag v$VER)"; exit 1
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          # accept small tag typos: v1.9.1, v.1.9.1, V1.9.1, 1.9.1
+          NORM=$(printf '%s' "$TAG" | sed -E 's/^[vV]?[.-]?//')
+          if [ "${GITHUB_EVENT_NAME}" != "workflow_dispatch" ] && [ "$NORM" != "$VER" ]; then
+            echo "::error::Release tag $TAG does not match the app version $VER in package.json. Use the tag v$VER."; exit 1
           fi
       - name: Build and sign the update
         env:
@@ -65,9 +68,11 @@ jobs:
           NOTES="docs/RELEASE-$VER.md"
           ARGS=(--title "Penny $VER" --latest)
           if [ -f "$NOTES" ]; then ARGS+=(--notes-file "$NOTES"); else ARGS+=(--notes "Penny $VER"); fi
-          if gh release view "v$VER" >/dev/null 2>&1; then
-            gh release upload "v$VER" "out/penny-app-$VER.pkg" "out/latest.json" --clobber
+          TAG="${{ steps.v.outputs.tag }}"
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] || [ -z "$TAG" ]; then TAG="v$VER"; fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "out/penny-app-$VER.pkg" "out/latest.json" --clobber
           else
-            gh release create "v$VER" "out/penny-app-$VER.pkg" "out/latest.json" "${ARGS[@]}"
+            gh release create "$TAG" "out/penny-app-$VER.pkg" "out/latest.json" "${ARGS[@]}"
           fi
           echo "Installed copies will find it at https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/latest.json"
