@@ -102,7 +102,7 @@ const icon=(n,s=20,sw=1.9)=>`<svg class="ic${DIR_ICONS.has(n)?' flip':''}" viewB
 
 
 /* ---------- Penny brand ---------- */
-const BRAND={name:'Penny',tag:'Every cent, in focus.',version:'1.10.1',publisher:(typeof PUBLISHER!=='undefined'?PUBLISHER.name:'Akrot')};
+const BRAND={name:'Penny',tag:'Every cent, in focus.',version:'1.10.2',publisher:(typeof PUBLISHER!=='undefined'?PUBLISHER.name:'Akrot')};
 /* The mark is defined once in brand/build_brand.py (-> logo-mark.js). Strokes only, so it works at 16 px and in one colour. */
 const LOGO_SVG=LOGO_MARK;
 
