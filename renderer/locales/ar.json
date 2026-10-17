@@ -434,7 +434,7 @@
   "set.scLock": "قفل",
   "set.scPages": "الصفحات",
   "set.photoUpdated": "تم تحديث الصورة",
-  "set.photoFail": "تعذّرت قراءة هذه الصورة",
+  "set.photoFail": "تعذّرت قراءة هذه الصورة. جرّب JPG أو PNG أو WebP.",
   "backup.lastGood": "آخر نسخة سليمة",
   "backup.beforeChange": "قبل تغيير",
   "backup.beforeUpgrade": "قبل الترقية",
@@ -1330,6 +1330,23 @@
   "in.wi.sec": "جرّب",
   "goal.addCard": "هدف جديد",
   "goal.addCardD": "رحلة، سيارة، احتياطي للطوارئ…",
-  "set.themeD2": "مظهرا بيني: كريمي وحبر، أو ليلي وكريمي"
+  "set.themeD2": "مظهرا بيني: كريمي وحبر، أو ليلي وكريمي",
+  "set.avatar": "صورة الملف الشخصي",
+  "av.smile": "ابتسامة",
+  "av.cool": "نظارة شمسية",
+  "av.fox": "ثعلب",
+  "av.cat": "قطة",
+  "av.bear": "دب",
+  "av.owl": "بومة",
+  "av.sprout": "برعم",
+  "av.leaf": "ورقة",
+  "av.sun": "شمس",
+  "av.moon": "قمر",
+  "av.star": "نجمة",
+  "av.rocket": "صاروخ",
+  "av.headphones": "سماعات",
+  "av.coffee": "قهوة",
+  "av.mountain": "جبل",
+  "av.heart": "قلب"
  }
 }

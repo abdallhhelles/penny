@@ -64,7 +64,7 @@ function sanitizeData(d){
     if(!st||typeof st!=='object'||Array.isArray(st))d.settings={};
     else{
       if(typeof st.photo!=='string'||(st.photo&&!/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(st.photo)))st.photo='';
-      if(typeof st.avatar!=='string'||/[<>"'&]/.test(st.avatar))st.avatar='🙂';else st.avatar=st.avatar.slice(0,8);
+      st.avatar=avId(typeof st.avatar==='string'?st.avatar:'');
       for(const k of['name','nick','why']){if(typeof st[k]!=='string')st[k]='';else st[k]=st[k].slice(0,200);}
     }
   }

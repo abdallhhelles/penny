@@ -1258,3 +1258,22 @@ html.theme-anim,html.theme-anim *,html.theme-anim *::before,html.theme-anim *::a
 ::selection{background:rgba(var(--accent-rgb),.35)}
 html[data-style="clean"][data-theme="light"] ::-webkit-scrollbar-thumb{background:rgba(20,33,31,.22);background-clip:padding-box}
 html[data-style="clean"][data-theme="dark"] ::-webkit-scrollbar-thumb{background:rgba(169,184,180,.28);background-clip:padding-box}
+/* ---------- 1.10 profile pictures: brand avatars in copper, evergreen and sand ---------- */
+html[data-theme="dark"]{--av-cu-bg:rgba(238,154,92,.16);--av-cu-fg:#EE9A5C;--av-ev-bg:rgba(43,184,154,.15);--av-ev-fg:#2BB89A;--av-sa-bg:rgba(232,223,211,.10);--av-sa-fg:#E8DFD3;--av-ring:rgba(251,246,239,.10)}
+html[data-theme="light"]{--av-cu-bg:#F5E0CF;--av-cu-fg:#9E4520;--av-ev-bg:#D5ECE5;--av-ev-fg:#0F7563;--av-sa-bg:#ECE3D7;--av-sa-fg:#14211F;--av-ring:rgba(20,33,31,.08)}
+.av-cu{--av-bg:var(--av-cu-bg);--av-fg:var(--av-cu-fg)}
+.av-ev{--av-bg:var(--av-ev-bg);--av-fg:var(--av-ev-fg)}
+.av-sa{--av-bg:var(--av-sa-bg);--av-fg:var(--av-sa-fg)}
+html .avatar,html[data-style="clean"] .avatar{background-color:var(--av-bg,var(--fill-2));background-image:none;color:var(--av-fg,var(--text));box-shadow:inset 0 0 0 1px var(--av-ring);overflow:hidden;display:grid;place-items:center;flex:none}
+html .avatar.photo,html[data-style="clean"] .avatar.photo{background-color:var(--fill-2);background-size:cover;background-position:center;background-repeat:no-repeat}
+.av-g{width:78%;height:78%;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;display:block}
+.av-g .f{fill:currentColor;stroke:none}
+.avs button{appearance:none;border:0;padding:0;font:inherit;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;cursor:pointer;background:var(--av-bg);color:var(--av-fg);box-shadow:inset 0 0 0 1px var(--av-ring);transition:transform .25s var(--spring),box-shadow .2s}
+.avs button .av-g{width:80%;height:80%}
+.avs button:hover{transform:scale(1.1)}
+.avs button.on{box-shadow:0 0 0 2px var(--bg1),0 0 0 4px var(--accent);transform:scale(1.06)}
+.avs button:focus-visible{outline:none;box-shadow:0 0 0 2px var(--bg1),0 0 0 4px var(--accent)}
+#av_big{border-radius:50%}
+#av_big:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+/* Pro badge: copper with readable text in both themes */
+html .pill.pro,html[data-style="clean"] .pill.pro{background:var(--accent);color:var(--on-accent);border-radius:99px}

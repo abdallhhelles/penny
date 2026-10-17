@@ -418,7 +418,7 @@
   "set.scLock": "Bloquear",
   "set.scPages": "Páginas",
   "set.photoUpdated": "Foto actualizada",
-  "set.photoFail": "No se pudo leer esa imagen",
+  "set.photoFail": "No se pudo leer esa imagen. Prueba con JPG, PNG o WebP.",
   "backup.lastGood": "Última copia correcta",
   "backup.beforeChange": "Antes de un cambio",
   "backup.beforeUpgrade": "Antes de actualizar",
@@ -1294,6 +1294,23 @@
   "in.wi.sec": "Pruébalo",
   "goal.addCard": "Nueva meta",
   "goal.addCardD": "Un viaje, un coche, un colchón…",
-  "set.themeD2": "Los dos estilos de Penny: crema y tinta, o noche y crema"
+  "set.themeD2": "Los dos estilos de Penny: crema y tinta, o noche y crema",
+  "set.avatar": "Foto de perfil",
+  "av.smile": "Sonrisa",
+  "av.cool": "Gafas de sol",
+  "av.fox": "Zorro",
+  "av.cat": "Gato",
+  "av.bear": "Oso",
+  "av.owl": "Búho",
+  "av.sprout": "Brote",
+  "av.leaf": "Hoja",
+  "av.sun": "Sol",
+  "av.moon": "Luna",
+  "av.star": "Estrella",
+  "av.rocket": "Cohete",
+  "av.headphones": "Auriculares",
+  "av.coffee": "Café",
+  "av.mountain": "Montaña",
+  "av.heart": "Corazón"
  }
 }

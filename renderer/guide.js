@@ -1,11 +1,5 @@
 'use strict';
 /* ============ Personal touches + illustrated guide + tips ============ */
-const AVATARS=['🙂','😎','🦊','🐼','🐱','🐶','🦄','🌻','🚀','🎧','☕','🌈','🍀','⭐','🦋','🐙'];
-function avatarHtml(size=36,fs){
-  const s=S.settings,st=`width:${size}px;height:${size}px;font-size:${fs||Math.round(size*.52)}px`;
-  if(s.photo)return`<div class="avatar photo" style="${st};background-image:url(${s.photo})"></div>`;
-  return`<div class="avatar" style="${st}">${s.avatar||esc((s.name||'You')[0].toUpperCase())}</div>`;
-}
 const callName=()=>(S.settings.nick||S.settings.name||'').trim();
 function greetText(){
   const n=callName(),h=new Date().getHours(),g=greet(),st=S.settings.greet,nm=n?', '+esc(n):'';
@@ -14,10 +8,6 @@ function greetText(){
   if(st==='playful'){const L=['Hey','Hi','Look who\'s here','Welcome back','Ready'];const w=L[(new Date().getDate()+h)%L.length];return`${w}${nm}!`;}
   return`${g}${nm}`;
 }
-function resizePhoto(file){
-  return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=160;const g=c.getContext('2d');const m=Math.min(im.width,im.height),sx=(im.width-m)/2,sy=(im.height-m)/2;g.drawImage(im,sx,sy,m,m,0,0,160,160);res(c.toDataURL('image/jpeg',.82));};im.src=fr.result;};fr.readAsDataURL(file);});
-}
-
 /* ---------- tips ---------- */
 const TIPS=[
  {e:'⌨️',t:'Type it like you say it',d:'Press N and write “coffee 4.50 at Starbucks yesterday”. Penny fills in the amount, place, category and date.'},

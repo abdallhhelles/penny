@@ -323,8 +323,8 @@ const setGroup=(head,body,foot)=>`<div class="sg">${head?`<div class="sec-h">${h
 PAGES.settings={title:'Settings',
  render(){const s=S.settings,cat=SET_CAT&&SET_CATS.some(c=>c[0]===SET_CAT)?SET_CAT:null,shown=SET_CATS.filter(c=>c[0]!=='windows'||hasNative);
   const H=trh;
-  const you=setGroup('',`<div class="group profile"><div class="setrow plain" style="padding:18px 16px"><div id="av_big" style="cursor:pointer" title="${H('set.changePhoto')}">${avatarHtml(64,30)}</div><div class="grow"><b style="font-size:18px">${esc(s.nick||s.name||tr('set.yourName'))}</b><small>${H('set.profileNote')}</small></div><button class="btn sm" id="ph_up">${H('set.photo')}</button>${s.photo?`<button class="btn sm" id="ph_rm">${H('set.remove')}</button>`:''}<input type="file" id="ph_file" accept="image/*" hidden></div>
-   <div class="setrow plain"><div class="avs" id="avs">${AVATARS.map(e=>`<span class="${!s.photo&&s.avatar===e?'on':''}" data-av="${e}">${e}</span>`).join('')}</div></div>
+  const you=setGroup('',`<div class="group profile"><div class="setrow plain" style="padding:18px 16px"><div id="av_big" role="button" tabindex="0" style="cursor:pointer" title="${H('set.changePhoto')}" aria-label="${H('set.changePhoto')}">${avatarHtml(64)}</div><div class="grow"><b style="font-size:18px">${esc(s.nick||s.name||tr('set.yourName'))}</b><small>${H('set.profileNote')}</small></div><button class="btn sm" id="ph_up">${H('set.photo')}</button>${s.photo?`<button class="btn sm" id="ph_rm">${H('set.remove')}</button>`:''}<input type="file" id="ph_file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/avif" hidden></div>
+   <div class="setrow plain"><div class="avs" id="avs" role="radiogroup" aria-label="${H('set.avatar')}">${AVATARS.map(e=>{const on=!s.photo&&avId(s.avatar)===e;return`<button type="button" class="av-${AV_TONE[e]}${on?' on':''}" data-av="${e}" role="radio" aria-checked="${on}" aria-label="${H('av.'+e)}">${avSvg(e)}</button>`;}).join('')}</div></div>
    ${srow('user','var(--blue)',H('set.name'),'',`<input type="text" id="st_name" value="${esc(s.name)}" placeholder="${H('set.yourName')}">`)}
    ${srow('sparkles','var(--pink)',H('set.nick'),H('set.nickD'),`<input type="text" id="st_nick" value="${esc(s.nick)}" placeholder="${H('set.nickPh')}">`)}
    ${srow('star','var(--orange)',H('set.why'),H('set.whyD'),`<input type="text" id="st_why" value="${esc(s.why)}" maxlength="60" placeholder="${H('set.whyPh')}">`)}
@@ -458,9 +458,9 @@ PAGES.settings={title:'Settings',
   $('#st_fs',v).oninput=e=>{set('fontSize',+e.target.value);e.target.closest('.setrow').querySelector('small').textContent=tr('set.textSizeD',{px:+e.target.value});};
   $('#st_name',v).oninput=e=>{S_.name=e.target.value;save();updateSideFoot();};
   $('#st_nick',v).oninput=e=>{S_.nick=e.target.value;save();updateSideFoot();};$('#st_why',v).oninput=e=>{S_.why=e.target.value;save();updateSideFoot();};$('#st_greet',v).onchange=e=>set('greet',e.target.value);
-  $('#avs',v).onclick=e=>{const a=e.target.dataset.av;if(!a)return;S_.avatar=a;S_.photo='';changed();};
-  const phf=$('#ph_file',v);$('#ph_up',v).onclick=$('#av_big',v).onclick=()=>phf.click();
-  phf.onchange=async()=>{if(!phf.files[0])return;try{S_.photo=await resizePhoto(phf.files[0]);changed();toast(tr('set.photoUpdated'));}catch{toast(tr('set.photoFail'));}};
+  $('#avs',v).onclick=e=>{const b=e.target.closest('[data-av]'),a=b&&b.dataset.av;if(!a)return;S_.avatar=a;S_.photo='';changed();};
+  const phf=$('#ph_file',v),avb=$('#av_big',v);$('#ph_up',v).onclick=avb.onclick=()=>phf.click();avb.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();phf.click();}};
+  phf.onchange=async()=>{const f=phf.files[0];phf.value='';if(!f)return;try{S_.photo=await resizePhoto(f);changed();toast(tr('set.photoUpdated'));}catch{toast(tr('set.photoFail'));}};
   const pr=$('#ph_rm',v);if(pr)pr.onclick=()=>{S_.photo='';changed();};
   $('#st_rsnd',v).onchange=e=>set('remSound',e.target.value);$('#st_rplay',v).onclick=()=>{const k=$('#st_rsnd',v).value;playSound(k==='default'?'chime':k);};
   $('#st_rlead',v).onchange=e=>set('remLead',+e.target.value);$('#st_qon',v).onchange=e=>{set('quietOn',e.target.checked);changed();};

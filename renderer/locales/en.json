@@ -418,7 +418,7 @@
   "set.scLock": "Lock",
   "set.scPages": "Pages",
   "set.photoUpdated": "Photo updated",
-  "set.photoFail": "Could not read that image",
+  "set.photoFail": "Could not read that image. Try a JPG, PNG or WebP.",
   "backup.lastGood": "Last good copy",
   "backup.beforeChange": "Before change",
   "backup.beforeUpgrade": "Before upgrade",
@@ -1294,6 +1294,23 @@
   "in.wi.sec": "Try it",
   "goal.addCard": "New goal",
   "goal.addCardD": "A trip, a car, a safety net…",
-  "set.themeD2": "Penny’s two looks: Cream and Ink, or Night and Cream"
+  "set.themeD2": "Penny’s two looks: Cream and Ink, or Night and Cream",
+  "set.avatar": "Profile picture",
+  "av.smile": "Smile",
+  "av.cool": "Sunglasses",
+  "av.fox": "Fox",
+  "av.cat": "Cat",
+  "av.bear": "Bear",
+  "av.owl": "Owl",
+  "av.sprout": "Sprout",
+  "av.leaf": "Leaf",
+  "av.sun": "Sun",
+  "av.moon": "Moon",
+  "av.star": "Star",
+  "av.rocket": "Rocket",
+  "av.headphones": "Headphones",
+  "av.coffee": "Coffee",
+  "av.mountain": "Mountain",
+  "av.heart": "Heart"
  }
 }
