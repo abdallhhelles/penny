@@ -21,21 +21,21 @@
   const typeOfCat = x => (x === 'income' ? 'income' : 'expense');
 
   const KEYWORDS = [
-    [/coffee|cafe|starbucks|restaurant|lunch|dinner|breakfast|pizza|burger|mcdonald|kfc|takeout|sushi|\bbar\b|brunch|restaurante|cafeter|comida|almuerzo|\bcena\b|مطعم|قهوة|كافيه|غداء|عشاء|وجبة/i, 'Dining'],
-    [/grocer|supermarket|walmart|aldi|lidl|carrefour|costco|market|bakery|trader joe|whole foods|supermercado|panader|mercado|بقالة|سوبرماركت|هايبر|مخبز/i, 'Groceries'],
-    [/uber|lyft|taxi|\bbus\b|metro|train|fuel|\bgas\b|petrol|parking|toll|careem|gasolina|autob|estacionamiento|بنزين|تاكسي|مواصلات|أوبر|اوبر|موقف/i, 'Transport'],
-    [/\brent\b|mortgage|landlord|alquiler|hipoteca|arriendo|إيجار|ايجار/i, 'Housing'],
-    [/electric|water|internet|wifi|phone bill|utility|utilities|electricidad|\bagua\b|\bluz\b|كهرباء|مياه|إنترنت|انترنت|فاتورة/i, 'Utilities'],
-    [/netflix|spotify|disney|hulu|youtube|icloud|subscription|prime|adobe|chatgpt|suscrip|اشتراك/i, 'Subscriptions'],
-    [/doctor|pharmacy|dentist|hospital|medicine|clinic|gym|farmacia|m[eé]dico|dentista|cl[ií]nica|gimnasio|صيدلية|طبيب|مستشفى|عيادة|نادي/i, 'Health'],
-    [/amazon|clothes|shoes|zara|h&m|ikea|shopping|mall|ropa|zapatos|ملابس|حذاء|مول/i, 'Shopping'],
-    [/movie|cinema|concert|game|steam|playstation|ticket|cine\b|concierto|juego|سينما|حفلة|لعبة/i, 'Entertainment'],
-    [/flight|hotel|airbnb|booking|trip|airline|vuelo|viaje|طيران|فندق|رحلة/i, 'Travel'],
-    [/course|tuition|book|udemy|school|university|curso|colegio|universidad|matr[ií]cula|دورة|مدرسة|جامعة|كتاب/i, 'Education'],
-    [/gift|present|birthday|regalo|cumplea|هدية|عيد ميلاد/i, 'Gifts'],
-    [/salary|paycheck|payroll|wage|salario|n[oó]mina|sueldo|راتب|مرتب/i, 'Salary'],
-    [/freelance|client|invoice|cliente|factura|عميل/i, 'Freelance'],
-    [/dividend|interest|stock|dividendo|inter[eé]s|أرباح|فوائد/i, 'Investments']
+    [/coffee|cafe|starbucks|restaurant|lunch|dinner|breakfast|pizza|burger|mcdonald|kfc|takeout|sushi|\bbar\b|brunch|restaurante|cafeter|comida|almuerzo|\bcena\b|مطعم|قهوة|كافيه|غداء|عشاء|وجبة|餐厅|饭店|咖啡|外卖|美团|饿了么|午餐|晚餐|早餐|火锅|रेस्टोरेंट|रेस्तरां|कैफे|खाना|नाश्ता|swiggy|zomato|dominos/i, 'Dining'],
+    [/grocer|supermarket|walmart|aldi|lidl|carrefour|costco|market|bakery|trader joe|whole foods|supermercado|panader|mercado|بقالة|سوبرماركت|هايبر|مخبز|超市|菜市场|生鲜|盒马|永辉|面包店|किराना|सुपरमार्केट|बाज़ार|bigbasket|blinkit|zepto|dmart|reliance fresh/i, 'Groceries'],
+    [/uber|lyft|taxi|\bbus\b|metro|train|fuel|\bgas\b|petrol|parking|toll|careem|gasolina|autob|estacionamiento|بنزين|تاكسي|مواصلات|أوبر|اوبر|موقف|滴滴|地铁|公交|出租车|加油|停车|高铁|火车票|टैक्सी|ऑटो|मेट्रो|पेट्रोल|पार्किंग|\bola\b|rapido|irctc/i, 'Transport'],
+    [/\brent\b|mortgage|landlord|alquiler|hipoteca|arriendo|إيجار|ايجار|房租|租金|房贷|物业|किराया|मकान|होम लोन/i, 'Housing'],
+    [/electric|water|internet|wifi|phone bill|utility|utilities|electricidad|\bagua\b|\bluz\b|كهرباء|مياه|إنترنت|انترنت|فاتورة|电费|水费|燃气|宽带|话费|网费|बिजली|पानी|गैस|रिचार्ज|\bjio\b|airtel/i, 'Utilities'],
+    [/netflix|spotify|disney|hulu|youtube|icloud|subscription|prime|adobe|chatgpt|suscrip|اشتراك|会员|订阅|爱奇艺|腾讯视频|优酷|सब्सक्रिप्शन|hotstar/i, 'Subscriptions'],
+    [/doctor|pharmacy|dentist|hospital|medicine|clinic|gym|farmacia|m[eé]dico|dentista|cl[ií]nica|gimnasio|صيدلية|طبيب|مستشفى|عيادة|نادي|医院|药店|诊所|牙医|健身|अस्पताल|दवा|डॉक्टर|क्लिनिक|जिम|apollo|pharmeasy/i, 'Health'],
+    [/amazon|clothes|shoes|zara|h&m|ikea|shopping|mall|ropa|zapatos|ملابس|حذاء|مول|淘宝|京东|拼多多|天猫|商场|衣服|鞋|flipkart|myntra|meesho|कपड़े|जूते|मॉल/i, 'Shopping'],
+    [/movie|cinema|concert|game|steam|playstation|ticket|cine\b|concierto|juego|سينما|حفلة|لعبة|电影|演唱会|游戏|门票|फिल्म|सिनेमा|खेल|टिकट|bookmyshow/i, 'Entertainment'],
+    [/flight|hotel|airbnb|booking|trip|airline|vuelo|viaje|طيران|فندق|رحلة|机票|酒店|旅游|携程|फ्लाइट|होटल|यात्रा|makemytrip/i, 'Travel'],
+    [/course|tuition|book|udemy|school|university|curso|colegio|universidad|matr[ií]cula|دورة|مدرسة|جامعة|كتاب|课程|学费|书|学校|大学|कोर्स|फीस|किताब|स्कूल|कॉलेज/i, 'Education'],
+    [/gift|present|birthday|regalo|cumplea|هدية|عيد ميلاد|礼物|红包|生日|उपहार|तोहफा|जन्मदिन/i, 'Gifts'],
+    [/salary|paycheck|payroll|wage|salario|n[oó]mina|sueldo|راتب|مرتب|工资|薪水|薪资|वेतन|तनख्वाह|सैलरी/i, 'Salary'],
+    [/freelance|client|invoice|cliente|factura|عميل|自由职业|客户|发票|फ्रीलांस|क्लाइंट|इनवॉइस/i, 'Freelance'],
+    [/dividend|interest|stock|dividendo|inter[eé]s|أرباح|فوائد|股息|利息|股票|लाभांश|ब्याज|शेयर/i, 'Investments']
   ];
 
   /* ---- rules ---- */
@@ -119,7 +119,8 @@
   function keyword(text, type, categories) {
     for (const [re, name] of KEYWORDS) {
       if (!re.test(text)) continue;
-      const c = (categories || []).find(c => fold(c.name) === fold(name));
+      const id = 'c_' + name.toLowerCase().replace(/\W+/g, '_');   // Penny's default categories keep this id in every language
+      const c = (categories || []).find(c => c.id === id) || (categories || []).find(c => fold(c.name) === fold(name));
       if (c && c.type === typeOfCat(type)) return c.id;
     }
     return null;
@@ -137,8 +138,8 @@
   }
 
   /* ---- clean-up: payees that sit in "Other" (or nothing), grouped, with a suggested category for each ---- */
-  const FALLBACK_NAME = /^(other|other income|misc|miscellaneous|uncategori[sz]ed|otros?|otros ingresos|أخرى|اخرى|متنوع)$/i;
-  const isFallbackCat = c => !!c && FALLBACK_NAME.test(String(c.name || '').trim());
+  const FALLBACK_NAME = /^(other|other income|misc|miscellaneous|uncategori[sz]ed|otros?|otros ingresos|أخرى|اخرى|متنوع|其他|其他收入|未分类|अन्य|अन्य आय|विविध)$/i;
+  const isFallbackCat = c => !!c && (c.id === 'c_other' || c.id === 'c_other_income' || FALLBACK_NAME.test(String(c.name || '').trim()));
   function groupUncategorized(transactions, categories, ctx) {
     const fb = new Set((categories || []).filter(isFallbackCat).map(c => c.id));
     const groups = new Map();

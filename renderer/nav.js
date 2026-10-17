@@ -96,7 +96,8 @@ function pageEnhance(){
 
 /* ---------- shell pieces ---------- */
 function mountNavShell(){
-  const main=$('#main');if(!main||$('#jump'))return;
+  const main=$('#main');if(!main)return;
+  const tt=$('#totop');if(tt){tt.setAttribute('aria-label',tr('jump.top'));tt.title=tr('jump.top')+' (Home)';return;}   // shell rebuilt (language change): relabel only
   const bar=document.createElement('div');bar.id='jump';bar.className='jump';main.appendChild(bar);
   const t=document.createElement('button');t.id='totop';t.className='totop';t.setAttribute('aria-label',tr('jump.top'));t.title=tr('jump.top')+' (Home)';t.innerHTML=icon('chevron',18,2.4);
   t.onclick=()=>{const v=$('#view');v.scrollTo({top:0,behavior:motionOK()?'smooth':'auto'});const h=$('.lt h1',v);if(h){h.tabIndex=-1;h.focus({preventScroll:true});}};

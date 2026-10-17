@@ -36,7 +36,7 @@ function wireAttach(s,files){
     const metas=[],bad=[];
     for(const f of [...fl].slice(0,10)){
       if(f.size>20*1024*1024){bad.push({name:f.name,error:'SIZE'});continue;}
-      try{const r=await native.attSave(f.name||('Screenshot '+today()+'.png'),new Uint8Array(await f.arrayBuffer()));r&&r.ok?metas.push(r.file):bad.push({name:f.name,error:r&&r.error});}catch{bad.push({name:f.name,error:'other'});}
+      try{const r=await native.attSave(f.name||(tr('att.shot')+' '+today()+'.png'),new Uint8Array(await f.arrayBuffer()));r&&r.ok?metas.push(r.file):bad.push({name:f.name,error:r&&r.error});}catch{bad.push({name:f.name,error:'other'});}
     }
     addMetas(metas,bad);
   };
@@ -50,7 +50,7 @@ function wireAttach(s,files){
   box.addEventListener('drop',e=>{box.classList.remove('att-drop');if(e.dataTransfer?.files?.length){e.preventDefault();fromFiles(e.dataTransfer.files);}});
   box.addEventListener('paste',e=>{const fl=[...(e.clipboardData?.files||[])];if(!fl.length)return;
     const inText=!!e.target.closest('input,textarea');if(inText&&!fl.every(f=>f.type.startsWith('image/')))return;   // pasting text into a field works as usual
-    {e.preventDefault();fromFiles(fl.map((f,i)=>f.name&&f.name!=='image.png'?f:new File([f],`Screenshot ${today()}${i?' '+(i+1):''}.png`,{type:f.type})));}});
+    {e.preventDefault();fromFiles(fl.map((f,i)=>f.name&&f.name!=='image.png'?f:new File([f],`${tr('att.shot')} ${today()}${i?' '+(i+1):''}.png`,{type:f.type})));}});
   draw();
 }
 /* images: a viewer inside Penny; everything else: the usual app for that file */

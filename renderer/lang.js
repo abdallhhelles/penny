@@ -52,26 +52,30 @@ async function initI18n(){
 }
 /* pref: 'auto' or a language code. Returns the language actually used. */
 async function setAppLanguage(pref,{reopen=false}={}){
+  const prevRegion=I18N.meta(I18N.lang).region;
   if(hasNative&&native.sysSet){try{const r=await native.sysSet({lang:pref});SYS.lang=r&&r.lang?r.lang:pref;}catch(e){logErr('could not save language',e);SYS.lang=pref;}}
   else{try{localStorage.setItem(LANG_KEY,pref);}catch{}}
   const code=await selectLanguage(pref);
   applyLanguageEnv();
   if(typeof S!=='undefined'&&S){
     setupFmt();
+    let ch=syncCatNames(S);   // Penny's own category names follow the new language
+    if(S.settings.locale&&S.settings.locale!=='auto'&&S.settings.locale===prevRegion){S.settings.locale='auto';ch=true;setupFmt();}   // formats follow too, unless a region was picked on purpose
+    if(ch)saveNow();
     if($('#side')&&$('#side').children.length){closeCmd();buildShell();applySettings();go(cur);}
   }
   if(reopen){closeModal();onboarding();}
   return code;
 }
 function langOptions(pref){
-  const autoName=(()=>{try{const c=I18N.resolve('auto',(typeof SYS!=='undefined'&&SYS.systemLocale)||navigator.language,LANGS.map(l=>l.code));const x=LANGS.find(l=>I18N.canon(l.code)===c);return x?x.nativeName:'';}catch{return '';}})();
-  return opt('auto',tr('lang.auto',{language:autoName}),pref==='auto')+LANGS.map(l=>opt(l.code,l.nativeName+(l.nativeName!==l.name?` · ${l.name}`:'')+(l.source==='user'?' ★':''),pref!=='auto'&&I18N.canon(l.code)===I18N.canon(pref)||pref===l.code)).join('');
+  const autoName=(()=>{try{const c=I18N.resolve('auto',(typeof SYS!=='undefined'&&SYS.systemLocale)||navigator.language,LANGS.map(l=>l.code));const x=LANGS.find(l=>I18N.canon(l.code)===c);return x?localeName(x.code,x.nativeName):'';}catch{return '';}})();
+  return opt('auto',tr('lang.auto',{language:autoName}),pref==='auto')+LANGS.map(l=>{const here=localeName(l.code,l.name);return opt(l.code,l.nativeName+(here&&here!==l.nativeName?` · ${here}`:'')+(l.source==='user'?' ★':''),pref!=='auto'&&I18N.canon(l.code)===I18N.canon(pref)||pref===l.code);}).join('');
 }
 /* Which regional formats exist for the active language (used by the Settings selector). */
 function regionOptions(selected){
   const own=I18N.meta(I18N.lang).region;
   const list=LOCALES.slice();
-  return opt('auto',tr('set.formatAuto',{format:own?(LOCALES.find(l=>l[0]===own)||[own,own])[1]:I18N.lang}),selected==='auto')+list.map(([k,l])=>opt(k,l,selected===k)).join('');
+  return opt('auto',tr('set.formatAuto',{format:own?localeName(own,(LOCALES.find(l=>l[0]===own)||[own,own])[1]):I18N.lang}),selected==='auto')+list.map(([k,l])=>opt(k,localeName(k,l),selected===k)).join('');
 }
 /* Does this regional locale normally use non-Western digits? (decides whether the Digits row is shown) */
 function nativeDigitsDiffer(){

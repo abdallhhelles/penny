@@ -12,10 +12,14 @@ function openDoc(kind){
     title=tr('sc.title');
     body=`<div class="group scl">${SHORTCUTS.map(([k,d])=>`<div class="setrow plain"><div class="grow"><b>${trh(d)}</b></div><span class="kbd" dir="ltr">${esc(k)}</span></div>`).join('')}</div>`;
   }else{
-    const map={eula:['about.eula',()=>LEGAL.eula(PUBLISHER),PUBLISHER.eulaVersion],privacy:['about.privacy',()=>LEGAL.privacy(PUBLISHER),PUBLISHER.privacyVersion],oss:['about.oss',()=>LEGAL.oss(),null]};
+    const map={eula:['about.eula',m=>LEGAL.eula(PUBLISHER,m),PUBLISHER.eulaVersion],privacy:['about.privacy',m=>LEGAL.privacy(PUBLISHER,m),PUBLISHER.privacyVersion],oss:['about.oss',m=>LEGAL.oss(m),null]};
     const m=map[kind];if(!m)return;
     title=tr(m[0]);
-    body=`<p class="muted sm" style="padding:0 6px 8px">${m[2]?trh('about.docVersion',{version:m[2],date:PUBLISHER.docsDate})+' · ':''}${trh('about.legalEn')}</p><pre class="legal" dir="ltr" tabindex="0">${esc(m[1]())}</pre>`;
+    const isEn=I18N.baseOf(I18N.lang)==='en',dirA=I18N.dir();
+    const text=en=>esc(m[1](en?LEGAL.en():(k=>tr(k))));
+    body=`<p class="muted sm" style="padding:0 6px 8px">${m[2]?trh('about.docVersion',{version:m[2],date:PUBLISHER.docsDate})+' · ':''}${trh('about.legalEn')}${isEn?'':` <button type="button" class="btn sm" id="lgsw" style="margin-inline-start:6px">${trh('about.showEnglish')}</button>`}</p><pre class="legal" id="lgtx" dir="${isEn?'ltr':dirA}" tabindex="0">${text(isEn)}</pre>`;
+    setTimeout(()=>{const b=document.getElementById('lgsw'),p=document.getElementById('lgtx');if(!b||!p)return;let en=false;
+      b.onclick=()=>{en=!en;p.innerHTML=text(en);p.dir=en?'ltr':dirA;b.textContent=tr(en?'about.showTranslated':'about.showEnglish');};},0);
   }
   openSheet({title,ok:'',cancel:tr('about.close'),body});
 }

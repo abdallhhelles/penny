@@ -121,18 +121,6 @@ function goalEta(g,monthly){
 }
 
 /* feed the smart findings into the Insights page */
-function smartInsights(){
-  const out=[];if(!S.transactions.length)return out;
-  anomalies().forEach(a=>out.push({e:'🔎',title:`Unusually large: ${txTitle(a.t)} (${money(a.t.amount)})`,text:`That's about ${Math.round(a.t.amount/Math.max(1,a.med))}× your typical ${cat(a.t.category).name.toLowerCase()} purchase (${money(a.med)}).`,tone:'warn'}));
-  duplicates().forEach(([a,b])=>out.push({e:'👯',title:`Possible double charge at ${b.merchant}`,text:`${money(b.amount)} on ${dshort(a.date)} and again on ${dshort(b.date)}. Worth checking if that was intended.`,tone:'warn'}));
-  priceHikes().forEach(h=>out.push({e:'💸',title:`${h.name} just got more expensive`,text:`${money(h.from)} → ${money(h.to)} (+${money(h.to-h.from)}, ${money((h.to-h.from)*12)} a year if it repeats monthly).`,tone:'warn'}));
-  const r=runway();
-  if(totals().liquid>0&&r.monthly>20)out.push(r.months>=6?{e:'🛟',title:`${r.months.toFixed(1)} months of runway`,text:'Your cash would cover 6+ months of normal spending. A strong safety net.',tone:'good'}:r.months<2?{e:'🛟',title:`Only ${r.months.toFixed(1)} months of runway`,text:`Experts suggest 3–6 months (about ${money(r.monthly*3)}–${money(r.monthly*6)}). Try a goal for it.`,tone:'bad'}:{e:'🛟',title:`${r.months.toFixed(1)} months of runway`,text:`Aim for 3–6 months — that's ${money(r.monthly*3)} to ${money(r.monthly*6)}.`,tone:'info'});
-  const st=streaks();if(st.noSpend>=2)out.push({e:'🔥',title:`${st.noSpend}-day no-spend streak`,text:`Your best in the last 4 months is ${st.best} days.`,tone:'good'});
-  const ru=roundUps(30);if(ru.n>=8)out.push({e:'🪙',title:`Round-ups could have saved ${money(ru.total)}`,text:`Rounding up ${ru.n} purchases last month adds up to about ${money(ru.yearly)} a year.`,tone:'info'});
-  return out;
-}
-
 function lastWeekSummary(){
   const t=today(),dow=(pd(t).getDay()+6)%7,ws=addDays(t,-dow),a=addDays(ws,-7),b=addDays(ws,-1);
   const tx=S.transactions.filter(x=>x.date>=a&&x.date<=b);

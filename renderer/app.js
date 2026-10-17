@@ -84,9 +84,9 @@ function act(a){
 }
 function autoBudget(){
   const avg=lastMonthsAvgByCat(3);const c=S.categories.filter(c=>c.type==='expense'&&!c.budget&&avg[c.id]>0);
-  if(!c.length){toast('Not enough history yet, or every category already has a budget');return;}
-  openSheet({title:'Suggested Budgets',ok:'Apply All',body:`<p class="muted" style="text-align:center;margin-bottom:14px">Based on your average of the last 3 periods, rounded up with a small saving buffer.</p><div class="fg">${c.map(x=>`<div class="fr"><span class="lic">${gl(x.emoji,20)}</span><label style="flex:1">${esc(x.name)}<small style="display:block" class="muted">usually ${money(avg[x.id])}</small></label><b class="amt">${money(Math.ceil(avg[x.id]*1.05/5)*5)}</b></div>`).join('')}</div>`,
-   onOk:()=>{c.forEach(x=>x.budget=Math.ceil(avg[x.id]*1.05/5)*5);closeModal();changed();toast('Budgets created');}});
+  if(!c.length){toast(tr('bud.autoNone'));return;}
+  openSheet({title:tr('bud.autoTitle'),ok:tr('bud.autoApply'),body:`<p class="muted" style="text-align:center;margin-bottom:14px">${trh('bud.autoD')}</p><div class="fg">${c.map(x=>`<div class="fr"><span class="lic">${gl(x.emoji,20)}</span><label style="flex:1">${esc(x.name)}<small style="display:block" class="muted">${esc(tr('bud.usually',{amount:money(avg[x.id])}))}</small></label><b class="amt">${money(Math.ceil(avg[x.id]*1.05/5)*5)}</b></div>`).join('')}</div>`,
+   onOk:()=>{c.forEach(x=>x.budget=Math.ceil(avg[x.id]*1.05/5)*5);closeModal();changed();toast(tr('bud.autoDone'));}});
 }
 document.addEventListener('click',e=>{
   const v=e.target.closest('#view');if(!v)return;
@@ -158,14 +158,14 @@ document.addEventListener('keydown',e=>{
 async function replaceData(d){
   if(hasNative&&S){
     const r=await native.snapshot('before-change');
-    if(r&&r.ok===false&&r.error!=='no-data'){logErr('safety backup failed',r.error);toast('Couldn’t save a safety backup first, so nothing was changed.',{ms:6000});return false;}
+    if(r&&r.ok===false&&r.error!=='no-data'){logErr('safety backup failed',r.error);toast(tr('err.noSafety'),{ms:6000});return false;}
   }
   d=normalize(d);S=d;_ver++;setupFmt();applySettings();runBills();saveNow();updateSideFoot();budOff=0;go(cur==='settings'?'settings':'dashboard');return true;
 }
 const REGION_CUR={US:'USD',GB:'GBP',EG:'EGP',DE:'EUR',FR:'EUR',ES:'EUR',IT:'EUR',NL:'EUR',CA:'CAD',AU:'AUD',SA:'SAR',AE:'AED',IN:'INR',JP:'JPY',TR:'TRY',BR:'BRL',MX:'MXN',CH:'CHF',ZA:'ZAR'};
 function onboarding(){
   const reg=(navigator.language.split('-')[1]||'US').toUpperCase();const guess=REGION_CUR[reg]||'USD';
-  const lg=LOCALES.find(l=>l[0]===navigator.language)?navigator.language:'en-US';
+  const lg='auto';   // number and date formats follow the language until you pick a region in Settings
   openModal(`<div class="sheet" data-noclose><div class="grab"></div><div class="sb" style="padding:26px 28px 30px"><div style="text-align:center"><div class="logo" style="margin:6px auto 16px;width:72px;height:72px;border-radius:22px">${LOGO_SVG(76)}</div><h2 style="font-size:30px;letter-spacing:-.7px">${trh('onb.title')}</h2><p class="muted" style="margin:6px 0 26px;font-size:16px">${trh('onb.sub')}</p></div>
     <div class="fg"><div class="fr"><label>${trh('onb.language')}</label><select id="wl">${langOptions(readLangPref())}</select></div><div class="fr"><label>${trh('onb.name')}</label><input id="wn" placeholder="${trh('common.optional')}"></div><div class="fr"><label>${trh('onb.currency')}</label><select id="wc">${CURRENCIES.map(c=>opt(c,c,c===guess)).join('')}</select></div></div>
     <div style="display:grid;gap:10px;margin-top:22px"><button class="btn pri" id="wf" style="height:50px;font-size:17px">${trh('onb.start')}</button><button class="btn" id="wd" style="height:46px">${trh('onb.demo')}</button></div></div></div>`,s=>{

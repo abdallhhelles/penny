@@ -90,7 +90,7 @@
 
   /* ---------------- planning ratios ---------------- */
   const NEEDS = /^(groceries|transport|housing|utilities|health|education|insurance|rent|mortgage|childcare)$/i;
-  const bucketOf = c => (c && (c.bucket === 'needs' || c.bucket === 'wants')) ? c.bucket : (c && NEEDS.test(String(c.name || '').trim()) ? 'needs' : 'wants');
+  const bucketOf = c => (c && (c.bucket === 'needs' || c.bucket === 'wants')) ? c.bucket : (c && (NEEDS.test(String(c.name || '').trim()) || NEEDS.test(String(c.id || '').replace(/^c_/, ''))) ? 'needs' : 'wants');
 
   /* 50/30/20 — needs / wants / savings as a share of income.
      savings = income - needs - wants (anything you did not spend, including money moved to savings). */

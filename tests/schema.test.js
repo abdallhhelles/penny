@@ -76,7 +76,7 @@ test('core: split transactions count once in totals and per part in category spe
 /* ---------------- smart ---------------- */
 test('smart: every insight function copes with an empty file and returns sane shapes', () => {
   C.run("S=freshData('')");
-  for (const fn of ['anomalies', 'duplicates', 'priceHikes', 'streaks', 'weeklyDigest', 'dailyPace', 'topMerchants', 'debtList', 'smartInsights', 'runway', 'detectSubs', 'detectRecurringAll']) {
+  for (const fn of ['anomalies', 'duplicates', 'priceHikes', 'streaks', 'weeklyDigest', 'dailyPace', 'topMerchants', 'debtList', 'runway', 'detectSubs', 'detectRecurringAll']) {
     assert.doesNotThrow(() => C.run(`${fn}()`), fn);
   }
   assert.ok(Array.isArray(C.run('anomalies()')));

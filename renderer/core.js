@@ -16,10 +16,12 @@ const sum=(a,f=x=>x)=>a.reduce((s,x)=>s+f(x),0);
 const debounce=(f,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>f(...a),ms)}};
 
 /* ---------- constants ---------- */
-const ACC_TYPES={checking:{n:'Checking',e:'🏦'},savings:{n:'Savings',e:'🐖'},cash:{n:'Cash',e:'💵'},credit:{n:'Credit card',e:'💳',liab:true},investment:{n:'Investment',e:'📈'},loan:{n:'Loan / Debt',e:'🏷️',liab:true}};
+const ACC_TYPES={checking:{e:'🏦',get n(){return tr('acct.checking')}},savings:{e:'🐖',get n(){return tr('acct.savings')}},cash:{e:'💵',get n(){return tr('acct.cash')}},credit:{e:'💳',liab:true,get n(){return tr('acct.credit')}},investment:{e:'📈',get n(){return tr('acct.investment')}},loan:{e:'🏷️',liab:true,get n(){return tr('acct.loan')}}};   // names follow the app language
 const LIQUID=['checking','savings','cash'];
 const CURRENCIES=['USD','EUR','GBP','EGP','SAR','AED','CAD','AUD','JPY','INR','TRY','CHF','CNY','BRL','MXN','ZAR','KRW','SEK','NOK','PLN'];
-const LOCALES=[['en-US','English (US)'],['en-GB','English (UK)'],['de-DE','Deutsch'],['fr-FR','Français'],['es-ES','Español (España)'],['es-MX','Español (México)'],['it-IT','Italiano'],['pt-BR','Português (BR)'],['tr-TR','Türkçe'],['ar-EG','العربية (مصر)'],['ar-SA','العربية (السعودية)'],['ar-AE','العربية (الإمارات)'],['ja-JP','日本語']];
+const LOCALES=[['en-US','English (US)'],['en-GB','English (UK)'],['de-DE','Deutsch'],['fr-FR','Français'],['es-ES','Español (España)'],['es-MX','Español (México)'],['it-IT','Italiano'],['pt-BR','Português (BR)'],['tr-TR','Türkçe'],['ar-EG','العربية (مصر)'],['ar-SA','العربية (السعودية)'],['ar-AE','العربية (الإمارات)'],['ja-JP','日本語'],['zh-CN','中文（中国）'],['zh-TW','中文（台灣）'],['zh-HK','中文（香港）'],['zh-SG','中文（新加坡）'],['hi-IN','हिन्दी (भारत)'],['en-IN','English (India)']];
+/* a region's name in the app language ("英语（美国）"), falling back to its own name */
+const localeName=(code,fallback)=>{try{const n=new Intl.DisplayNames([I18N.lang],{type:'language'}).of(code);return n&&n!==code?n:fallback||code;}catch{return fallback||code;}};
 const ACCENTS=['#0A7F66','#5E5CE6','#BF5AF2','#FF375F','#FF9F0A','#FFD60A','#30D158','#63E6E2','#64D2FF','#8E8E93'];
 const EMOJIS=['🛒','🍽️','☕','🚗','⛽','🏠','💡','📱','❤️‍🩹','💊','🛍️','👕','🎬','🎮','📺','🎵','✈️','🏖️','🎓','📚','🎁','🐶','👶','💼','💻','📈','💰','🏦','🧾','🔧','🧩','🎯','🛡️','🚲','🏋️','🍔','🍕','🥦','💈','🌱'];
 const PALETTE=['#0A84FF','#FF375F','#30D158','#FF9F0A','#64D2FF','#BF5AF2','#5E5CE6','#63E6E2','#FF6482','#FFD60A','#AC8E68','#8E8E93','#FF8A65'];
@@ -29,11 +31,22 @@ const DEFAULT_CATS=[
  ['Health','💊','#FF375F','e'],['Shopping','🛍️','#BF5AF2','e'],['Entertainment','🎬','#FF6482','e'],['Subscriptions','📺','#64D2FF','e'],['Travel','✈️','#63E6E2','e'],
  ['Education','🎓','#AC8E68','e'],['Gifts','🎁','#FF8A65','e'],['Other','🧩','#8E8E93','e'],
  ['Salary','💼','#30D158','i'],['Freelance','💻','#0A84FF','i'],['Investments','📈','#BF5AF2','i'],['Other income','💰','#FFD60A','i']
-].map(([name,emoji,color,t])=>({id:'c_'+name.toLowerCase().replace(/\W+/g,'_'),name,emoji,color,type:t==='e'?'expense':'income',budget:0}));
+].map(([name,emoji,color,t])=>({id:'c_'+name.toLowerCase().replace(/\W+/g,'_'),name,emoji,color,type:t==='e'?'expense':'income',budget:0,nameAuto:true}));
+/* Penny's own category names follow the app language until you rename one (nameAuto). Logic uses the stable ids (c_groceries…). */
+const DEFAULT_CAT_EN=Object.fromEntries(DEFAULT_CATS.map(c=>[c.id,c.name]));
+const isDefaultCat=c=>!!c&&Object.prototype.hasOwnProperty.call(DEFAULT_CAT_EN,c.id);
+function syncCatNames(d){
+  if(!d||!Array.isArray(d.categories)||typeof tr!=='function')return false;let n=0;
+  for(const c of d.categories){if(!isDefaultCat(c)||c.nameAuto===false)continue;
+    if(c.nameAuto||c.name===DEFAULT_CAT_EN[c.id]){const v=tr('cat.def.'+c.id.slice(2));if(v&&c.name!==v){c.name=v;n++;}c.nameAuto=true;}}
+  return n>0;
+}
+const isSubsCat=c=>!!c&&(c.id==='c_subscriptions'||/^subscriptions$/i.test(String(c.name||'').trim()));
+const isHousingCat=c=>!!c&&(c.id==='c_housing'||!!c.housing||/^(housing|rent|mortgage)$/i.test(String(c.name||'').trim()));
 const WIDGETS=[['networth','Net worth hero'],['tip','Tip of the day'],['kpis','Key numbers'],['safe','Safe to spend'],['health','Health score'],['planning','Money health'],['reminders','Reminders'],['digest','This week'],['cashflow','Cash-flow forecast'],['categories','Spending breakdown'],['pace','Daily budget pace'],['budgets','Budgets'],['goals','Goals'],['upcoming','Upcoming bills'],['recent','Recent activity'],['insights','Smart insights'],['heatmap','Spending heatmap']];
 const BACKGROUNDS=[['aurora','Aurora',0],['penny','Penny copper',0],['sunset','Sunset',1],['ocean','Ocean',1],['forest','Forest',1],['graphite','Graphite',1],['mono','Mono',1]];
 const WIDE=['networth','kpis','cashflow'];
-const DEFAULT_SETTINGS={style:'clean',name:'',currency:'USD',locale:'en-US',digits:'latn',theme:(typeof matchMedia==='function'&&matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark',accent:'#C9632F',brand2:true,report:{real:.04,swr:.039},blur:30,opacity:9,material:'acrylic',compact:false,density:'comfortable',anim:true,solid:false,notify:true,startDismissed:false,lastNotified:'',fontSize:15,cycleStart:1,privacy:false,pin:null,salt:null,bg:'aurora',motion:'full',autoLock:0,blurOnLeave:false,lockOnMinimize:false,remindHour:9,remindDays:3,weeklyDigest:true,remSound:'chime',remLead:0,quietOn:false,quietFrom:'22:00',quietTo:'07:00',nick:'',avatar:'smile',photo:'',why:'',greet:'friendly',tipsSeen:false,tipsOff:false,tipIdx:0,tourDone:false,uiSounds:false,lastDigest:'',roundUp:false,sounds:false,widgets:WIDGETS.map(w=>({id:w[0],on:true}))};
+const DEFAULT_SETTINGS={style:'clean',name:'',currency:'USD',locale:'auto',digits:'latn',theme:(typeof matchMedia==='function'&&matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark',accent:'#C9632F',brand2:true,report:{real:.04,swr:.039},blur:30,opacity:9,material:'acrylic',compact:false,density:'comfortable',anim:true,solid:false,notify:true,startDismissed:false,lastNotified:'',fontSize:15,cycleStart:1,privacy:false,pin:null,salt:null,bg:'aurora',motion:'full',autoLock:0,blurOnLeave:false,lockOnMinimize:false,remindHour:9,remindDays:3,weeklyDigest:true,remSound:'chime',remLead:0,quietOn:false,quietFrom:'22:00',quietTo:'07:00',nick:'',avatar:'smile',photo:'',why:'',greet:'friendly',tipsSeen:false,tipsOff:false,tipIdx:0,tourDone:false,uiSounds:false,lastDigest:'',roundUp:false,sounds:false,widgets:WIDGETS.map(w=>({id:w[0],on:true}))};
 
 let SYS={launchAtStartup:false,startMinimized:true,closeToTray:false,tray:true,hotkey:true,hotkeyAccel:'CommandOrControl+Alt+P',alwaysOnTop:false,hideFromCapture:false,zoom:1,hotkeyOk:true,packaged:false,lang:'auto',systemLocale:'en-US'};
 /* ---------- state ---------- */
@@ -63,6 +76,7 @@ function normalize(d){
   d.settings={...DEFAULT_SETTINGS,...(d.settings||{})};
   const st=d.settings;
   if(st.accent==='#7c8cff')st.accent=DEFAULT_SETTINGS.accent;
+  syncCatNames(d);
   st.style='clean';st.bg='none';if(typeof avId==='function')st.avatar=avId(st.avatar);st.solid=true;st.material='none';   // 1.10 brand: one look, two themes
   if(!st.brand2){st.brand2=true;if(st.accent==='#0A84FF')st.accent=DEFAULT_SETTINGS.accent} // 1.7.1 rebrand: move users still on the old default blue to Penny green; custom choices are kept
   const known=new Set((st.widgets||[]).map(w=>w.id));
@@ -107,7 +121,7 @@ const saveNow=()=>{ if(!S)return; try{
   const {__rec,...clean}=S;_dirty=false;_pendingSave=false;
   if(!hasNative){localStorage.setItem('penny',JSON.stringify(clean));return;}
   native.save(clean).then(r=>{
-    if(r&&r.ok===false){_dirty=true;logErr('save rejected',r.error);if(_saveFails++%5===0&&typeof toast==='function')toast('Couldn’t save your latest change. Your previous data is safe — please restart Penny.',{ms:7000});}
+    if(r&&r.ok===false){_dirty=true;logErr('save rejected',r.error);if(_saveFails++%5===0&&typeof toast==='function')toast(tr('err.saveFailed'),{ms:7000});}
     else _saveFails=0;
   }).catch(e=>{_dirty=true;logErr('save failed',e);});
 }catch(e){_dirty=true;logErr('save error',e);} };
@@ -249,7 +263,7 @@ function accountSeries(a,days){
 }
 
 /* ---------- bills / recurring ---------- */
-const FREQ={weekly:'Weekly',biweekly:'Every 2 weeks',monthly:'Monthly',quarterly:'Every 3 months',yearly:'Yearly'};
+const FREQ={get weekly(){return tr('freq.weekly')},get biweekly(){return tr('freq.biweekly')},get monthly(){return tr('freq.monthly')},get quarterly(){return tr('freq.quarterly')},get yearly(){return tr('freq.yearly')}};
 function stepBill(next,freq,anchor){
   switch(freq){case'weekly':return addDays(next,7);case'biweekly':return addDays(next,14);case'quarterly':return addMonths(next,3,anchor);case'yearly':return addMonths(next,12,anchor);default:return addMonths(next,1,anchor);}
 }
@@ -345,7 +359,7 @@ function planning(){
   if(!refs.length){refs=[statsFor(0)];partial=true;}
   const n=refs.length,avg=f=>sum(refs,f)/n,inc=avg(x=>x.inc),exp=avg(x=>x.exp);
   let needs=0,wants=0,housing=0;
-  for(const x of refs)for(const [cid,v] of Object.entries(x.byCat)){const c=cat(cid);if(Finance.bucketOf(c)==='needs')needs+=v;else wants+=v;if(/^(housing|rent|mortgage)$/i.test(String(c.name).trim())||c.housing)housing+=v;}
+  for(const x of refs)for(const [cid,v] of Object.entries(x.byCat)){const c=cat(cid);if(Finance.bucketOf(c)==='needs')needs+=v;else wants+=v;if(isHousingCat(c))housing+=v;}
   needs/=n;wants/=n;housing/=n;
   const T=totals(),fx=fxo();
   let debtPay=0;for(const a of S.accounts){if(!isLiab(a)||!(a.minPay>0))continue;const r=fx.rate(accCur(a));if(r!=null)debtPay+=a.minPay*r;}
@@ -367,43 +381,7 @@ function detectRecurringAll(){
   return Finance.detectRecurring(S.transactions,{today:today(),known:new Set(S.bills.map(b=>Finance.fold(b.name))),norm:s=>RulesEngine.normPayee(s)||Finance.fold(s)});
 }
 function detectSubs(){return detectRecurringAll().filter(r=>r.type==='expense'&&r.freq==='monthly').map(r=>({name:r.name,amount:r.amount,category:r.category,accountId:r.accountId,next:r.next}));}
-function insights(){
-  const out=[];const t=today(),p=periodFor(t),prev=periodFor(t,-1);
-  const st=stats(p.start,p.end),pv=stats(prev.start,addDays(prev.start,diffDays(p.start,t)));
-  const cname=id=>cat(id).name;
-  if(!S.transactions.length)return[{e:'👋',title:'Welcome!',text:'Add your first transaction and I\'ll start finding patterns for you.',tone:'info'}];
-  if(pv.exp>0&&st.exp>0){
-    const ch=(st.exp-pv.exp)/pv.exp;
-    out.push(ch>0.1?{e:'📈',title:`Spending is up ${pct(ch)} vs this point last period`,text:`You've spent ${money(st.exp)} so far vs ${money(pv.exp)} at the same stage last period.`,tone:'bad'}
-      :ch<-0.1?{e:'🎉',title:`Spending is down ${pct(-ch)} vs last period`,text:`${money(pv.exp-st.exp)} less than at this point last period. Keep it up!`,tone:'good'}
-      :{e:'⚖️',title:'Spending is steady',text:'Right in line with last period at the same point.',tone:'info'});
-  }
-  const top=Object.entries(st.byCat).sort((a,b)=>b[1]-a[1])[0];
-  if(top)out.push({e:cat(top[0]).emoji,title:`${cname(top[0])} is your top category`,text:`${money(top[1])} — ${pct(top[1]/st.exp)} of this period's spending.`,tone:'info'});
-  for(const c of S.categories.filter(c=>c.type==='expense'&&c.budget>0)){
-    const s=st.byCat[c.id]||0,B=budgetFor(c).available;
-    if(s>B)out.push({e:'🚨',title:`${c.name} is over budget`,text:`${money(s-B)} over your ${money(B)} limit.`,tone:'bad'});
-    else if(s>B*.85)out.push({e:'⚠️',title:`${c.name} budget ${s>=B?'fully used':'almost used'}`,text:`${pct(s/B)} spent — ${money(B-s)} left for ${Math.max(0,diffDays(t,p.end))} more days.`,tone:'warn'});
-  }
-  const f=forecast(45);
-  if(f.min.y<0)out.push({e:'🕳️',title:'Heads up: your cash may run short',text:`Projected balance dips to ${money(f.min.y)} around ${dshort(f.min.x)}. Consider moving money or trimming spending.`,tone:'bad'});
-  const subs=S.bills.filter(b=>b.type==='expense'&&(cat(b.category).name==='Subscriptions'||b.sub));
-  if(subs.length){const m=sum(subs,monthlyEq);out.push({e:'🔁',title:`${subs.length} subscriptions cost ${money(m)}/mo`,text:`That's ${money(m*12)} a year. Worth a quick review?`,tone:'info'});}
-  const ds=detectSubs();
-  if(ds.length)out.push({e:'🕵️',title:`Found ${ds.length} possible hidden subscription${ds.length>1?'s':''}`,text:`${ds.map(d=>d.name).join(', ')} look like monthly charges. Add them in Bills to forecast them.`,tone:'warn'});
-  const days=Math.min(diffDays(p.start,t)+1,p.days);
-  const spendDays=new Set(S.transactions.filter(x=>x.type==='expense'&&x.date>=p.start&&x.date<=t).map(x=>x.date)).size;
-  if(days>=7&&days-spendDays>=3)out.push({e:'🧘',title:`${days-spendDays} no-spend days this period`,text:'Zero-spend days are the quietest way to boost savings.',tone:'good'});
-  let we=0,wd=0;for(const x of S.transactions){if(x.type!=='expense'||x.billId||x.date<p.start||x.date>t)continue;const g=pd(x.date).getDay();(g===0||g===6?(we+=x.amount):(wd+=x.amount));}
-  if(we+wd>50&&we/(we+wd)>0.45)out.push({e:'🛍️',title:'Weekend spender',text:`${pct(we/(we+wd))} of your discretionary spending happens on weekends.`,tone:'info'});
-  if(st.inc>0)out.push(st.rate>=0.2?{e:'💪',title:`Saving ${pct(st.rate)} of income`,text:'You\'re above the 20% rule of thumb. Fantastic.',tone:'good'}:st.rate<0?{e:'🔻',title:'Spending more than you earn this period',text:`Deficit of ${money(-st.net)} so far.`,tone:'bad'}:{e:'🌱',title:`Saving ${pct(st.rate)} of income`,text:`Reaching 20% would mean ${money(st.inc*0.2-st.net)} more this period.`,tone:'info'});
-  for(const g of S.goals){
-    if(g.saved>=g.target){out.push({e:'🏆',title:`Goal reached: ${g.name}`,text:'Time to celebrate (within budget, of course).',tone:'good'});continue;}
-    if(g.deadline){const need=goalNeeded(g);const left=diffDays(t,g.deadline);if(left<0)out.push({e:'⏰',title:`${g.name} is past its deadline`,text:`${money(g.target-g.saved)} still to go.`,tone:'warn'});else if(need>st.net&&st.net>0&&need>st.net*1.5)out.push({e:'🎯',title:`${g.name} needs ${money(need)}/mo`,text:`That's more than your current monthly surplus of ${money(st.net)}.`,tone:'warn'});}
-  }
-  try{out.push(...smartInsights());}catch(e){console.error(e);}
-  return out;
-}
+/* (1.10.2) the old English insights() was replaced by insights.js › insightList() */
 function goalNeeded(g){
   const left=diffDays(today(),g.deadline);if(left<=0)return g.target-g.saved;
   return Math.max(0,(g.target-g.saved)/Math.max(1,left/30.44));
@@ -449,59 +427,75 @@ function dueSoon(days=3){
 }
 
 /* ---------- "Ask Penny": offline natural-language questions ---------- */
+/* Ask Penny understands questions in every bundled language: common phrases are first mapped onto the English words the
+   parser below knows ("花了" / "gasté" / "खर्च" / "صرفت" -> "spent"), so one parser serves all five languages. */
+const ASK_SYN=[
+ [/上个?星期|上周|पिछले (हफ्ते|सप्ताह)|semana pasada|الأسبوع الماضي/g,' last week '],[/这个?星期|本周|这周|इस (हफ्ते|सप्ताह)|esta semana|هذا الأسبوع/g,' this week '],
+ [/上个?月|पिछले महीने|mes pasado|الشهر الماضي/g,' last month '],[/这个月|本月|इस महीने|este mes|هذا الشهر/g,' this month '],
+ [/去年|पिछले साल|año pasado|العام الماضي|السنة الماضية/g,' last year '],[/今年|इस साल|este año|هذا العام|هذه السنة/g,' this year '],
+ [/昨天|बीते कल|ayer|أمس|البارحة/g,' yesterday '],[/今天|आज|hoy|اليوم/g,' today '],[/所有时间|总共|अब तक|siempre|en total|منذ البداية/g,' all time '],
+ [/最近\s*(\d+)\s*天|पिछले\s*(\d+)\s*दिन|últimos\s*(\d+)\s*días|آخر\s*(\d+)\s*(يوم|أيام)/g,(m,a,b,c,d)=>` last ${a||b||c||d} days `],
+ [/净资产|नेट वर्थ|कुल संपत्ति|patrimonio|صافي الثروة/g,' net worth '],[/买得起|能买|खरीद सकत|puedo permitirme|me alcanza para|هل أستطيع شراء|يمكنني شراء/g,' afford '],
+ [/余额|बैलेंस|शेष राशि|saldo|رصيد/g,' balance '],[/最大|最贵|सबसे (बड़ा|बड़ी|महंगा|महंगी)|mayor|más caro|أكبر|أغلى/g,' biggest expense '],
+ [/花了|花费|支出|消费|खर्च|gast[ée]|gasto|gastos|صرفت|أنفقت|إنفاق|مصروف/g,' spent '],[/赚了|收入|कमा|आय|gan[ée]|ingresos|كسبت|دخل/g,' earned '],
+ [/存了|储蓄|攒|बचत|बचाए|ahorr|ادخرت|وفرت|ادخار/g,' saved ']
+];
+const askNorm=q=>ASK_SYN.reduce((s,[re,to])=>s.replace(re,to),q);
 function rangeFromText(q){
   const t=today();let m;
-  if(/\byesterday\b/.test(q)){const d=addDays(t,-1);return{a:d,b:d,label:'yesterday'};}
-  if(/\btoday\b/.test(q))return{a:t,b:t,label:'today'};
-  if(/last week/.test(q)){const dow=(pd(t).getDay()+6)%7;const e=addDays(t,-dow-1);return{a:addDays(e,-6),b:e,label:'last week'};}
-  if(/this week/.test(q)){const dow=(pd(t).getDay()+6)%7;return{a:addDays(t,-dow),b:t,label:'this week'};}
-  if(m=q.match(/last (\d+) days?/))return{a:addDays(t,-(+m[1]-1)),b:t,label:`the last ${m[1]} days`};
-  if(/last (month|period)/.test(q)){const p=periodFor(t,-1);return{a:p.start,b:p.end,label:'last month'};}
-  if(/last year/.test(q)){const y=+t.slice(0,4)-1;return{a:y+'-01-01',b:y+'-12-31',label:'last year'};}
-  if(/this year|year to date|ytd/.test(q))return{a:t.slice(0,4)+'-01-01',b:t,label:'this year'};
-  if(/all time|ever|total/.test(q))return{a:'0000-00-00',b:'9999-99-99',label:'all time'};
-  const p=periodFor(t);return{a:p.start,b:p.end,label:'this month',dflt:true};
+  if(/\byesterday\b/.test(q)){const d=addDays(t,-1);return{a:d,b:d,label:tr('ask.r.yesterday')};}
+  if(/\btoday\b/.test(q))return{a:t,b:t,label:tr('ask.r.today')};
+  if(/last week/.test(q)){const dow=(pd(t).getDay()+6)%7;const e=addDays(t,-dow-1);return{a:addDays(e,-6),b:e,label:tr('ask.r.lastWeek')};}
+  if(/this week/.test(q)){const dow=(pd(t).getDay()+6)%7;return{a:addDays(t,-dow),b:t,label:tr('ask.r.thisWeek')};}
+  if(m=q.match(/last (\d+) days?/))return{a:addDays(t,-(+m[1]-1)),b:t,label:tr('ask.r.lastN',{count:+m[1]})};
+  if(/last (month|period)/.test(q)){const p=periodFor(t,-1);return{a:p.start,b:p.end,label:tr('ask.r.lastMonth')};}
+  if(/last year/.test(q)){const y=+t.slice(0,4)-1;return{a:y+'-01-01',b:y+'-12-31',label:tr('ask.r.lastYear')};}
+  if(/this year|year to date|ytd/.test(q))return{a:t.slice(0,4)+'-01-01',b:t,label:tr('ask.r.thisYear')};
+  if(/all time|ever|total/.test(q))return{a:'0000-00-00',b:'9999-99-99',label:tr('ask.r.all')};
+  const p=periodFor(t);return{a:p.start,b:p.end,label:tr('ask.r.thisMonth'),dflt:true};
 }
 function askPenny(raw){
-  const q=raw.toLowerCase().trim();if(q.length<4)return null;
+  const orig=raw.toLowerCase().trim();if(orig.length<2)return null;
+  const q=askNorm(orig);if(q.trim().length<4&&q===orig)return null;
   const num=x=>parseFloat(String(x).replace(/,/g,''));
   let m;
-  if(m=q.match(/afford\s+(?:a |an |the )?[^\d$€£]*[$€£]?\s*(\d[\d,]*(?:\.\d+)?)/)){
+  if(m=q.match(/afford\s+(?:a |an |the )?[^\d$€£₹¥]*[$€£₹¥]?\s*(\d[\d,]*(?:\.\d+)?)/)){
     const amount=num(m[1]),f=forecast(60),T=totals(),s=safeToSpend();
     const after=f.min.y-amount;const ok=after>=0;
-    return{e:ok?'✅':'⚠️',title:ok?`Yes, you can afford ${money(amount)}`:`Risky: ${money(amount)} could leave you short`,
-      text:`Liquid cash today is ${money(T.liquid)}. After this purchase your lowest projected balance over the next 60 days would be ${money(after)} (around ${dshort(f.min.x)}). Your safe-to-spend pace is ${money(s.perDay)}/day.`};
+    return{e:ok?'✅':'⚠️',title:tr(ok?'ask.affordYes':'ask.affordRisky',{amount:money(amount)}),
+      text:tr('ask.affordD',{liquid:money(T.liquid),after:money(after),date:dshort(f.min.x),perDay:money(s.perDay)})};
   }
-  if(/net ?worth/.test(q)){const T=totals();return{e:'💎',title:`Net worth: ${money(T.net)}`,text:`${money(T.assets)} in assets${T.liabs<0?` minus ${money(-T.liabs)} owed`:''}.`};}
+  if(/net ?worth/.test(q)){const T=totals();return{e:'💎',title:tr('ask.nw',{amount:money(T.net)}),text:T.liabs<0?tr('ask.nwD2',{assets:money(T.assets),owed:money(-T.liabs)}):tr('ask.nwD',{assets:money(T.assets)})};}
   if(/(balance|how much (money|cash)|do i have)/.test(q)&&!/spen|earn|income/.test(q)){
-    const a=S.accounts.find(a=>q.includes(a.name.toLowerCase()));
-    if(a)return{e:ACC_TYPES[a.type].e,title:`${a.name}: ${money(balance(a))}`,text:`${ACC_TYPES[a.type].n} account.`};
-    const T=totals();return{e:'💵',title:`You have ${money(T.liquid)} in cash accounts`,text:`Net worth is ${money(T.net)}.`};
+    const a=S.accounts.find(a=>orig.includes(a.name.toLowerCase()));
+    if(a)return{e:ACC_TYPES[a.type].e,title:`${a.name}: ${money(balance(a))}`,text:tr('ask.accType',{type:ACC_TYPES[a.type].n})};
+    const T=totals();return{e:'💵',title:tr('ask.cash',{amount:money(T.liquid)}),text:tr('ask.cashD',{amount:money(T.net)})};
   }
   const r=rangeFromText(q);
-  const matchCat=S.categories.find(c=>{const n=c.name.toLowerCase();return q.includes(n)||q.includes(n.replace(/s$/,''))||(n.endsWith('ing')&&q.includes(n.slice(0,-3)));});
+  const matchCat=S.categories.find(c=>{const n=c.name.toLowerCase();return orig.includes(n)||orig.includes(n.replace(/s$/,''))||(n.endsWith('ing')&&orig.includes(n.slice(0,-3)));});
   const merchants=[...new Set(S.transactions.map(t=>t.merchant).filter(Boolean))];
-  const matchMer=!matchCat&&merchants.find(x=>q.includes(x.toLowerCase()));
+  const matchMer=!matchCat&&merchants.find(x=>orig.includes(x.toLowerCase()));
   const inRange=S.transactions.filter(t=>t.date>=r.a&&t.date<=r.b);
   if(/(biggest|largest|most expensive|top)/.test(q)&&/(expens|purchase|spend|transaction|payment)/.test(q)){
     const l=inRange.filter(t=>t.type==='expense'&&(!matchCat||t.category===matchCat.id)).sort((a,b)=>b.amount-a.amount)[0];
-    if(!l)return{e:'🤷',title:'No expenses found',text:`Nothing recorded for ${r.label}.`};
-    return{e:'🏷️',title:`${money(l.amount)} at ${l.merchant||cat(l.category).name}`,text:`Your largest expense ${r.label} — ${dlong(l.date)}.`,tx:l};
+    if(!l)return{e:'🤷',title:tr('ask.noExp'),text:tr('ask.noExpD',{range:r.label})};
+    return{e:'🏷️',title:tr('ask.biggest',{amount:money(l.amount),where:l.merchant||cat(l.category).name}),text:tr('ask.biggestD',{range:r.label,date:dlong(l.date)}),tx:l};
   }
   if(/(spen|spent|expens|cost|paid|pay)/.test(q)){
     const cv=conv(),hasCat=t=>!matchCat||Finance.splitsOf(t).some(x=>x.category===matchCat.id);
     const part=t=>(matchCat?sum(Finance.splitsOf(t).filter(x=>x.category===matchCat.id),x=>x.amount):t.amount)*(t.amount?cv(t)/t.amount:0);
     const l=inRange.filter(t=>t.type==='expense'&&hasCat(t)&&(!matchMer||t.merchant===matchMer));
-    const total=sum(l,part);const what=matchCat?matchCat.name.toLowerCase():matchMer?matchMer:'';
+    const total=sum(l,part);const what=matchCat?matchCat.name:matchMer?matchMer:'';
     const days=Math.max(1,diffDays(r.a<'1900'?(l[0]?.date||r.b):r.a,r.b>today()?today():r.b)+1);
-    return{e:matchCat?matchCat.emoji:'🧾',title:`${money(total)} spent${what?` on ${what}`:''} ${r.label}`,text:`${l.length} transaction${l.length===1?'':'s'}${l.length?` · about ${money(total/days)} per day`:''}.`,list:l.sort((a,b)=>b.amount-a.amount).slice(0,4)};
+    return{e:matchCat?matchCat.emoji:'🧾',title:what?tr('ask.spentOn',{amount:money(total),what,range:r.label}):tr('ask.spent',{amount:money(total),range:r.label}),
+      text:l.length?tr('ask.spentD',{count:l.length,perDay:money(total/days)}):tr('ask.txN',{count:0}),list:l.sort((a,b)=>b.amount-a.amount).slice(0,4)};
   }
   if(/(earn|income|made|salary|paid me|received)/.test(q)){
     const l=inRange.filter(t=>t.type==='income'&&(!matchCat||t.category===matchCat.id));
-    return{e:'💰',title:`${money(sum(l,t=>t.amount))} earned ${r.label}`,text:`${l.length} deposit${l.length===1?'':'s'}.`,list:l.sort((a,b)=>b.amount-a.amount).slice(0,4)};
+    return{e:'💰',title:tr('ask.earned',{amount:money(sum(l,t=>t.amount)),range:r.label}),text:tr('ask.deposits',{count:l.length}),list:l.sort((a,b)=>b.amount-a.amount).slice(0,4)};
   }
   if(/(sav(e|ed|ing))/.test(q)){
-    const st=stats(r.a,r.b);return{e:'🐖',title:`${money(st.net)} saved ${r.label}`,text:`That's ${pct(st.rate)} of ${money(st.inc)} income.`};
+    const st=stats(r.a,r.b);return{e:'🐖',title:tr('ask.saved',{amount:money(st.net),range:r.label}),text:tr('ask.savedD',{pct:pct(st.rate),income:money(st.inc)})};
   }
   return null;
 }

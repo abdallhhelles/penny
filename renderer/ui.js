@@ -30,7 +30,7 @@ function confirmBox(msg,ok=tr('common.delete'),title=tr('confirm.areYouSure')){
   }));
 }
 function confirmType(msg,word,ok=tr('erase.cta'),title=tr('confirm.absolutelySure')){
-  return new Promise(res=>openModal(`<div class="alert"><h3>${esc(title)}</h3><p>${esc(msg)}</p><input id="ct" autocomplete="off" spellcheck="false" placeholder="${trh('confirm.typeToConfirm',{word})}" style="width:100%;margin:6px 0 12px;text-align:center"><div class="bt"><button id="n">${trh('common.cancel')}</button><button class="d" id="y" disabled style="opacity:.45">${esc(ok)}</button></div></div>`,s=>{
+  return new Promise(res=>openModal(`<div class="alert"><h3>${esc(title)}</h3><p>${esc(msg)}</p><input id="ct" autocomplete="off" spellcheck="false" placeholder="${esc(tr('confirm.typeToConfirm',{word}))}" style="width:100%;margin:6px 0 12px;text-align:center"><div class="bt"><button id="n">${trh('common.cancel')}</button><button class="d" id="y" disabled style="opacity:.45">${esc(ok)}</button></div></div>`,s=>{
     const inp=$('#ct',s),y=$('#y',s);inp.focus();
     inp.oninput=()=>{const typed=inp.value.trim().toUpperCase(),on=typed===word.toUpperCase()||typed==='ERASE'; /* the English word is always accepted, so a keyboard layout can never lock you out */y.disabled=!on;y.style.opacity=on?1:.45;};
     $('#n',s).onclick=()=>{closeModal();res(false)};y.onclick=()=>{if(y.disabled)return;closeModal();res(true)};
@@ -155,25 +155,25 @@ function openTx(tx,preset){
 /* ---------- account sheet ---------- */
 function openAcc(a){
   const edit=!!a;if(!edit&&S.accounts.length>=limitOf('accounts')){openUpgrade('accounts');return;}const cur=edit?balance(a):0;const hasTx=edit&&S.transactions.some(x=>x.accountId===a.id||x.toAccountId===a.id);
-  openSheet({title:edit?'Edit Account':'New Account',ok:edit?'Save':'Add',
-   body:`<div class="fg"><div class="fr"><label>Name</label><input id="n" value="${esc(a?.name||'')}" placeholder="e.g. Everyday checking"></div>
-    <div class="fr"><label>Type</label><select id="t">${Object.entries(ACC_TYPES).map(([k,v])=>opt(k,v.n,(a?.type||'checking')===k)).join('')}</select></div>
-    <div class="fr"><label id="bl">Balance</label><input id="b" type="number" step="0.01" value="${edit?Math.abs(cur)*(isLiab(a)?1:Math.sign(cur)||1):''}" placeholder="0.00"></div>
+  openSheet({title:tr(edit?'acc.edit':'acc.new'),ok:tr(edit?'common.save':'common.add'),
+   body:`<div class="fg"><div class="fr"><label>${trh('common.name')}</label><input id="n" value="${esc(a?.name||'')}" placeholder="${trh('acc.namePh')}"></div>
+    <div class="fr"><label>${trh('common.type')}</label><select id="t">${Object.entries(ACC_TYPES).map(([k,v])=>opt(k,v.n,(a?.type||'checking')===k)).join('')}</select></div>
+    <div class="fr"><label id="bl">${trh('acc.balance')}</label><input id="b" type="number" step="0.01" value="${edit?Math.abs(cur)*(isLiab(a)?1:Math.sign(cur)||1):''}" placeholder="0.00"></div>
     <div class="fr"><label>${trh('acc.currency')}</label><select id="cur" ${hasTx?'disabled':''}>${[...new Set([accCur(a),S.settings.currency,...CURRENCIES])].map(k=>opt(k,k,k===accCur(a))).join('')}</select></div></div>
     <div class="sec-f" id="bh" style="margin-top:-6px"></div>
     <div class="sec-f" style="margin-top:-6px">${trh(hasTx?'acc.currencyLocked':'acc.currencyD')}</div>
     <div class="fg" id="invf" style="display:none;margin-top:14px"><div class="fr"><label>${trh('acc.marketValue')}</label><input id="mv" type="number" step="0.01" min="0" value="${a?.value??''}" placeholder="${trh('common.optional')}"></div><div class="fr"><label>${trh('acc.asOf')}</label><input id="mvd" type="date" value="${a?.valueDate||today()}"></div><div class="fr"><label>${trh('acc.since')}</label><input id="since" type="date" value="${a?.since||''}"></div></div>
     <div class="sec-f" id="invh" style="display:none;margin-top:-6px">${trh('acc.marketValueD')}</div>
-    <div class="fg" id="debtf" style="display:none;margin-top:14px"><div class="fr"><label>Interest rate (APR %)</label><input id="apr" type="number" step="0.01" min="0" placeholder="e.g. 19.9" value="${a?.apr??''}"></div><div class="fr"><label>Minimum payment / month</label><input id="mp" type="number" step="0.01" min="0" placeholder="Optional" value="${a?.minPay??''}"></div><div class="fr" id="termw"><label>${trh('acc.term')}</label><input id="term" type="number" step="1" min="1" placeholder="${trh('common.optional')}" value="${a?.term??''}"></div></div>
-    <div class="sec-f" id="debth" style="display:none;margin-top:-6px">Used by the Planner to compare payoff strategies.</div>
-    ${edit?'<div class="fg" style="margin-top:16px"><div class="fr dest" id="del">Delete Account</div></div>':''}`,
+    <div class="fg" id="debtf" style="display:none;margin-top:14px"><div class="fr"><label>${trh('acc.apr')}</label><input id="apr" type="number" step="0.01" min="0" placeholder="${trh('acc.aprPh')}" value="${a?.apr??''}"></div><div class="fr"><label>${trh('acc.minPay')}</label><input id="mp" type="number" step="0.01" min="0" placeholder="${trh('common.optional')}" value="${a?.minPay??''}"></div><div class="fr" id="termw"><label>${trh('acc.term')}</label><input id="term" type="number" step="1" min="1" placeholder="${trh('common.optional')}" value="${a?.term??''}"></div></div>
+    <div class="sec-f" id="debth" style="display:none;margin-top:-6px">${trh('acc.debtD')}</div>
+    ${edit?`<div class="fg" style="margin-top:16px"><div class="fr dest" id="del">${trh('acc.delete')}</div></div>`:''}`,
    mount:s=>{
-    const lab=()=>{const l=ACC_TYPES[$('#t',s).value].liab;$('#bl',s).textContent=l?'Amount owed':'Balance';$('#debtf',s).style.display=$('#debth',s).style.display=l?'':'none';const ty=$('#t',s).value;$('#termw',s).style.display=ty==='loan'?'':'none';$('#invf',s).style.display=$('#invh',s).style.display=ty==='investment'?'':'none';$('#bh',s).textContent=l?'Enter what you owe as a positive number. It counts against your net worth.':'The balance as of today. Penny tracks changes from here.';};
+    const lab=()=>{const l=ACC_TYPES[$('#t',s).value].liab;$('#bl',s).textContent=tr(l?'acc.owed':'acc.balance');$('#debtf',s).style.display=$('#debth',s).style.display=l?'':'none';const ty=$('#t',s).value;$('#termw',s).style.display=ty==='loan'?'':'none';$('#invf',s).style.display=$('#invh',s).style.display=ty==='investment'?'':'none';$('#bh',s).textContent=tr(l?'acc.owedD':'acc.balanceD');};
     $('#t',s).onchange=lab;lab();
-    if(edit)$('#del',s).onclick=async()=>{closeModal();const n=S.transactions.filter(x=>x.accountId===a.id||x.toAccountId===a.id).length;if(await confirmBox(`“${a.name}”${n?` and its ${n} transactions`:''} will be removed. You can undo right after.`)){undoable('Account deleted',()=>{S.transactions=S.transactions.filter(x=>x.accountId!==a.id&&x.toAccountId!==a.id);S.bills=S.bills.filter(b=>b.accountId!==a.id);S.accounts=S.accounts.filter(x=>x.id!==a.id);});}};
+    if(edit)$('#del',s).onclick=async()=>{closeModal();const n=S.transactions.filter(x=>x.accountId===a.id||x.toAccountId===a.id).length;if(await confirmBox(n?tr('acc.delQn',{name:a.name,count:n}):tr('acc.delQ',{name:a.name}))){undoable(tr('acc.deleted'),()=>{S.transactions=S.transactions.filter(x=>x.accountId!==a.id&&x.toAccountId!==a.id);S.bills=S.bills.filter(b=>b.accountId!==a.id);S.accounts=S.accounts.filter(x=>x.id!==a.id);});}};
    },
    onOk:s=>{
-      const name=$('#n',s).value.trim();if(!name){toast('Give the account a name');return;}
+      const name=$('#n',s).value.trim();if(!name){toast(tr('acc.err.name'));return;}
       const type=$('#t',s).value;let v=parseFloat($('#b',s).value)||0;if(ACC_TYPES[type].liab)v=-Math.abs(v);
       const mvRaw=type==='investment'?$('#mv',s).value:'',mv=mvRaw!==''&&isFinite(parseFloat(mvRaw))?Math.max(0,parseFloat(mvRaw)):null,mvd=$('#mvd',s).value||today();
       const extra={currency:$('#cur',s).value||S.settings.currency};if(type==='investment'){const sn=$('#since',s).value;extra.since=sn||undefined;}
@@ -189,92 +189,92 @@ function openAcc(a){
 /* ---------- goal sheets ---------- */
 function openGoal(g){
   const edit=!!g;if(!edit&&S.goals.length>=limitOf("goals")){openUpgrade("accounts");return;}
-  openSheet({title:edit?'Edit Goal':'New Goal',ok:edit?'Save':'Create',
-   body:`<div class="fg"><div class="fr"><label>Name</label><input id="n" value="${esc(g?.name||'')}" placeholder="e.g. Dream vacation"></div>
-     <div class="fr col"><label class="f" style="margin:0">Icon</label>${emojiPick('em',g?.emoji||'🎯')}</div></div>
-    <div class="fg"><div class="fr"><label>Target</label><input id="t" type="number" step="1" value="${g?.target||''}" placeholder="0"></div>
-     <div class="fr"><label>Saved so far</label><input id="s" type="number" step="1" value="${g?.saved||0}"></div>
-     <div class="fr"><label>Deadline</label><input id="d" type="date" value="${g?.deadline||''}"></div></div>
-    <div class="sec-f" style="margin-top:-6px">A deadline lets Penny tell you how much to set aside each month.</div>
-    ${edit?'<div class="fg" style="margin-top:16px"><div class="fr dest" id="del">Delete Goal</div></div>':''}`,
-   mount:s=>{wireEmoji(s,'em');if(edit)$('#del',s).onclick=()=>{closeModal();undoable('Goal deleted',()=>{S.goals=S.goals.filter(x=>x.id!==g.id);});};},
-   onOk:s=>{const name=$('#n',s).value.trim(),t=parseFloat($('#t',s).value);if(!name||!(t>0)){toast('Name and target are required');return;}
+  openSheet({title:tr(edit?'goal.edit':'goal.new'),ok:tr(edit?'common.save':'common.create'),
+   body:`<div class="fg"><div class="fr"><label>${trh('common.name')}</label><input id="n" value="${esc(g?.name||'')}" placeholder="${trh('goal.namePh')}"></div>
+     <div class="fr col"><label class="f" style="margin:0">${trh('common.icon')}</label>${emojiPick('em',g?.emoji||'🎯')}</div></div>
+    <div class="fg"><div class="fr"><label>${trh('goal.target')}</label><input id="t" type="number" step="1" value="${g?.target||''}" placeholder="0"></div>
+     <div class="fr"><label>${trh('goal.savedSoFar')}</label><input id="s" type="number" step="1" value="${g?.saved||0}"></div>
+     <div class="fr"><label>${trh('goal.deadline')}</label><input id="d" type="date" value="${g?.deadline||''}"></div></div>
+    <div class="sec-f" style="margin-top:-6px">${trh('goal.deadlineD')}</div>
+    ${edit?`<div class="fg" style="margin-top:16px"><div class="fr dest" id="del">${trh('goal.delete')}</div></div>`:''}`,
+   mount:s=>{wireEmoji(s,'em');if(edit)$('#del',s).onclick=()=>{closeModal();undoable(tr('goal.deleted'),()=>{S.goals=S.goals.filter(x=>x.id!==g.id);});};},
+   onOk:s=>{const name=$('#n',s).value.trim(),t=parseFloat($('#t',s).value);if(!name||!(t>0)){toast(tr('goal.err'));return;}
       const o={name,emoji:$('#em',s).dataset.val,target:t,saved:parseFloat($('#s',s).value)||0,deadline:$('#d',s).value||null};
       if(edit)Object.assign(g,o);else S.goals.push({id:uid(),color:PALETTE[S.goals.length%PALETTE.length],...o});closeModal();changed();}});
 }
 function openFunds(g){
   let sign=1;
-  openSheet({title:'Goal Funds',ok:'Update',
-   body:`<div style="text-align:center;margin-bottom:10px"><div class="bigic">${gl(g.emoji,40)}</div><b style="font-size:19px">${esc(g.name)}</b><div class="muted">${money(g.saved)} of ${money(g.target)}</div></div>
-    <div class="seg" id="sg"><button class="inc on" data-s="1">Add money</button><button class="exp" data-s="-1">Withdraw</button></div>
-    <div class="amount-wrap"><small>Amount · ${esc(S.settings.currency)}</small><input id="a" class="amount-in" type="number" step="0.01" placeholder="0"></div>
+  openSheet({title:tr('goal.funds'),ok:tr('common.update'),
+   body:`<div style="text-align:center;margin-bottom:10px"><div class="bigic">${gl(g.emoji,40)}</div><b style="font-size:19px">${esc(g.name)}</b><div class="muted">${esc(tr('goal.of',{saved:money(g.saved),target:money(g.target)}))}</div></div>
+    <div class="seg" id="sg"><button class="inc on" data-s="1">${trh('goal.addMoney')}</button><button class="exp" data-s="-1">${trh('goal.withdraw')}</button></div>
+    <div class="amount-wrap"><small>${trh('common.amountIn',{currency:S.settings.currency})}</small><input id="a" class="amount-in" type="number" step="0.01" placeholder="0"></div>
     <div class="chips" style="justify-content:center">${[25,50,100,250,500].map(v=>`<button type="button" class="cc" data-q="${v}">+${v}</button>`).join('')}</div>`,
    mount:s=>{$$('#sg button',s).forEach(b=>b.onclick=()=>{sign=+b.dataset.s;$$('#sg button',s).forEach(x=>x.classList.toggle('on',x===b));});
      $$('[data-q]',s).forEach(b=>b.onclick=()=>{$('#a',s).value=(parseFloat($('#a',s).value)||0)+ +b.dataset.q;});},
-   onOk:s=>{const a=parseFloat($('#a',s).value);if(!(a>0)){toast('Enter an amount');return;}g.saved=Math.max(0,g.saved+sign*a);closeModal();changed();if(g.saved>=g.target){toast('Goal reached! Congratulations!',{ms:4200});confetti();}else toast(sign>0?`Added ${money(a)} to ${g.name}`:'Goal updated');}});
+   onOk:s=>{const a=parseFloat($('#a',s).value);if(!(a>0)){toast(tr('common.err.amount'));return;}g.saved=Math.max(0,g.saved+sign*a);closeModal();changed();if(g.saved>=g.target){toast(tr('goal.reachedT'),{ms:4200});confetti();}else toast(sign>0?tr('goal.added',{amount:money(a),name:g.name}):tr('goal.updated'));}});
 }
 
 /* ---------- recurring sheet ---------- */
 function openBill(b,suggest){
-  if(!S.accounts.length){toast('Add an account first');return;}
+  if(!S.accounts.length){toast(tr('tx.addAccountFirst'));return;}
   const edit=!!b&&!suggest;const v=b||{name:'',amount:'',type:'expense',freq:'monthly',next:today(),auto:true,accountId:S.accounts[0].id};
   let category=v.category;
-  openSheet({title:edit?'Edit Recurring':'New Recurring',ok:edit?'Save':'Add',
-   body:`<div class="fg"><div class="fr"><label>Name</label><input id="n" value="${esc(v.name)}" placeholder="Netflix, Rent, Salary…"></div>
-     <div class="fr"><label>Amount</label><input id="a" type="number" step="0.01" value="${v.amount}" placeholder="0.00"></div>
-     <div class="fr"><label>Kind</label><select id="ty">${opt('expense','Bill / expense',v.type==='expense')}${opt('income','Income',v.type==='income')}</select></div></div>
-    <div class="fg"><div class="fr"><label>Repeats</label><select id="f">${Object.entries(FREQ).map(([k,l])=>opt(k,l,v.freq===k)).join('')}</select></div>
-     <div class="fr"><label>Next date</label><input id="d" type="date" value="${v.next}"></div>
-     <div class="fr"><label>Account</label><select id="ac">${accOpts(v.accountId)}</select></div>
-     <div class="fr col"><label class="f" style="margin:0">Category</label><div class="chips" id="chips"></div></div></div>
-    <div class="fg"><div class="fr"><label>Post automatically</label><label class="switch tog"><input type="checkbox" id="au" ${v.auto?'checked':''}><i></i></label></div></div>
-    <div class="sec-f" style="margin-top:-6px">Automatic items are added on their due date. Turn off to confirm each one yourself.</div>
-    ${edit?'<div class="fg" style="margin-top:16px"><div class="fr dest" id="del">Delete Recurring Item</div></div>':''}`,
+  openSheet({title:tr(edit?'bill.edit':'bill.new'),ok:tr(edit?'common.save':'common.add'),
+   body:`<div class="fg"><div class="fr"><label>${trh('common.name')}</label><input id="n" value="${esc(v.name)}" placeholder="${trh('bill.namePh')}"></div>
+     <div class="fr"><label>${trh('tx.amount')}</label><input id="a" type="number" step="0.01" value="${v.amount}" placeholder="0.00"></div>
+     <div class="fr"><label>${trh('bill.kind')}</label><select id="ty">${opt('expense',tr('bill.kindExp'),v.type==='expense')}${opt('income',tr('tx.income'),v.type==='income')}</select></div></div>
+    <div class="fg"><div class="fr"><label>${trh('bill.repeats')}</label><select id="f">${Object.entries(FREQ).map(([k,l])=>opt(k,l,v.freq===k)).join('')}</select></div>
+     <div class="fr"><label>${trh('bill.nextDate')}</label><input id="d" type="date" value="${v.next}"></div>
+     <div class="fr"><label>${trh('tx.account')}</label><select id="ac">${accOpts(v.accountId)}</select></div>
+     <div class="fr col"><label class="f" style="margin:0">${trh('tx.category')}</label><div class="chips" id="chips"></div></div></div>
+    <div class="fg"><div class="fr"><label>${trh('bill.auto')}</label><label class="switch tog"><input type="checkbox" id="au" ${v.auto?'checked':''}><i></i></label></div></div>
+    <div class="sec-f" style="margin-top:-6px">${trh('bill.autoD')}</div>
+    ${edit?`<div class="fg" style="margin-top:16px"><div class="fr dest" id="del">${trh('bill.delete')}</div></div>`:''}`,
    mount:s=>{
     const fc=()=>{const type=$('#ty',s).value==='income'?'income':'expense';const list=S.categories.filter(c=>c.type===type);if(!list.some(c=>c.id===category))category=list[0]?.id;$('#chips',s).innerHTML=catChips(type,category);};
     fc();$('#ty',s).onchange=()=>{category=null;fc();};
     $('#chips',s).onclick=e=>{const x=e.target.closest('.cc');if(!x)return;category=x.dataset.c;$$('.cc',s).forEach(y=>y.classList.toggle('on',y===x));};
-    if(edit)$('#del',s).onclick=()=>{closeModal();undoable('Recurring item deleted',()=>{S.bills=S.bills.filter(x=>x.id!==b.id);});};
+    if(edit)$('#del',s).onclick=()=>{closeModal();undoable(tr('bill.deleted'),()=>{S.bills=S.bills.filter(x=>x.id!==b.id);});};
    },
-   onOk:s=>{const name=$('#n',s).value.trim(),a=parseFloat($('#a',s).value);if(!name||!(a>0)){toast('Name and amount are required');return;}
+   onOk:s=>{const name=$('#n',s).value.trim(),a=parseFloat($('#a',s).value);if(!name||!(a>0)){toast(tr('bill.err'));return;}
       const next=$('#d',s).value||today();
       const o={name,amount:a,type:$('#ty',s).value,freq:$('#f',s).value,next,anchor:pd(next).getDate(),category,accountId:$('#ac',s).value,auto:$('#au',s).checked};
       if(edit)Object.assign(b,o);else S.bills.push({id:uid(),...o});
-      const n=runBills();closeModal();changed();if(n)toast(`Posted ${n} due item${n>1?'s':''}`);}});
+      const n=runBills();closeModal();changed();if(n)toast(tr('bill.posted',{count:n}));}});
 }
 
 /* ---------- category & budget sheets ---------- */
 function openCat(c){
   const edit=!!c;const v=c||{name:'',emoji:'🧩',color:PALETTE[S.categories.length%PALETTE.length],type:'expense',budget:0};let color=v.color;
-  openSheet({title:edit?'Edit Category':'New Category',ok:edit?'Save':'Add',
-   body:`<div class="fg"><div class="fr"><label>Name</label><input id="n" value="${esc(v.name)}" placeholder="e.g. Pets"></div>
-     <div class="fr"><label>Type</label><select id="t" ${edit?'disabled':''}>${opt('expense','Expense',v.type==='expense')}${opt('income','Income',v.type==='income')}</select></div>
-     <div class="fr" id="bw"><label>Monthly budget</label><input id="b" type="number" step="1" value="${v.budget||''}" placeholder="None"></div></div>
+  openSheet({title:tr(edit?'cat.edit':'cat.new'),ok:tr(edit?'common.save':'common.add'),
+   body:`<div class="fg"><div class="fr"><label>${trh('common.name')}</label><input id="n" value="${esc(v.name)}" placeholder="${trh('cat.namePh')}"></div>
+     <div class="fr"><label>${trh('common.type')}</label><select id="t" ${edit?'disabled':''}>${opt('expense',tr('tx.expense'),v.type==='expense')}${opt('income',tr('tx.income'),v.type==='income')}</select></div>
+     <div class="fr" id="bw"><label>${trh('cat.budget')}</label><input id="b" type="number" step="1" value="${v.budget||''}" placeholder="${trh('cat.none')}"></div></div>
     <div class="fg" id="catx"><div class="fr"><label>${trh('cat.bucket')}</label><select id="bk">${opt('needs',tr('cat.bucket.needs'),Finance.bucketOf(v)==='needs')}${opt('wants',tr('cat.bucket.wants'),Finance.bucketOf(v)==='wants')}</select></div>
      <div class="fr" id="rw"><label>${trh('cat.roll')}</label><select id="ro">${['off','surplus','both'].map(k=>opt(k,tr('cat.roll.'+k),(v.roll||'off')===k)).join('')}</select></div></div>
     <div class="sec-f" id="catxh" style="margin-top:-6px">${trh('cat.bucketD')} ${trh('cat.rollD')}</div>
-    <div class="fg"><div class="fr col"><label class="f" style="margin:0">Icon</label>${emojiPick('em',v.emoji)}</div>
-     <div class="fr col"><label class="f" style="margin:0">Colour</label><div class="swatches" id="sw">${PALETTE.map(p=>`<div class="sw ${p===v.color?'on':''}" data-c="${p}" style="background:${p}"></div>`).join('')}</div></div></div>
-    ${edit?'<div class="fg"><div class="fr dest" id="del">Delete Category</div></div>':''}`,
+    <div class="fg"><div class="fr col"><label class="f" style="margin:0">${trh('common.icon')}</label>${emojiPick('em',v.emoji)}</div>
+     <div class="fr col"><label class="f" style="margin:0">${trh('common.colour')}</label><div class="swatches" id="sw">${PALETTE.map(p=>`<div class="sw ${p===v.color?'on':''}" data-c="${p}" style="background:${p}"></div>`).join('')}</div></div></div>
+    ${edit?`<div class="fg"><div class="fr dest" id="del">${trh('cat.delete')}</div></div>`:''}`,
    mount:s=>{wireEmoji(s,'em');
     $('#sw',s).onclick=e=>{if(!e.target.dataset.c)return;color=e.target.dataset.c;$$('.sw',s).forEach(x=>x.classList.toggle('on',x===e.target));};
     const bw=()=>{const inc=$('#t',s).value==='income';$('#bw',s).style.display=inc?'none':'';$('#catx',s).style.display=$('#catxh',s).style.display=inc?'none':'';};$('#t',s).onchange=bw;bw();
-    if(edit)$('#del',s).onclick=()=>{closeModal();if(S.categories.filter(x=>x.type===c.type).length<2){toast('Keep at least one category of each type');return;}
-      undoable('Category deleted',()=>{const fb=S.categories.find(x=>x.type===c.type&&x!==c);S.transactions.forEach(t=>{if(t.category===c.id)t.category=fb.id;if(t.splits)t.splits.forEach(sp=>{if(sp.category===c.id)sp.category=fb.id;});});S.bills.forEach(t=>{if(t.category===c.id)t.category=fb.id});S.categories=S.categories.filter(x=>x.id!==c.id);});};
+    if(edit)$('#del',s).onclick=()=>{closeModal();if(S.categories.filter(x=>x.type===c.type).length<2){toast(tr('cat.keepOne'));return;}
+      undoable(tr('cat.deleted'),()=>{const fb=S.categories.find(x=>x.type===c.type&&x!==c);S.transactions.forEach(t=>{if(t.category===c.id)t.category=fb.id;if(t.splits)t.splits.forEach(sp=>{if(sp.category===c.id)sp.category=fb.id;});});S.bills.forEach(t=>{if(t.category===c.id)t.category=fb.id});S.categories=S.categories.filter(x=>x.id!==c.id);});};
    },
-   onOk:s=>{const name=$('#n',s).value.trim();if(!name){toast('Name required');return;}
+   onOk:s=>{const name=$('#n',s).value.trim();if(!name){toast(tr('common.err.name'));return;}
       const inc=$('#t',s).value==='income',roll=inc?'off':$('#ro',s).value;
       const o={name,emoji:$('#em',s).dataset.val,color,budget:inc?0:Math.max(0,parseFloat($('#b',s).value)||0),bucket:inc?'wants':$('#bk',s).value,roll};
       if(roll==='off')o.rollFrom=undefined;else if(!(edit&&c.roll===roll&&c.rollFrom))o.rollFrom=periodFor(today()).start;   // carry-over counts from the period it was switched on
-      if(edit)Object.assign(c,o);else S.categories.push({id:uid(),type:$('#t',s).value,...o});closeModal();changed();}});
+      if(edit){if(o.name!==c.name)o.nameAuto=false;Object.assign(c,o);}else S.categories.push({id:uid(),type:$('#t',s).value,...o});closeModal();changed();}});
 }
 function editBudget(c){
   const avg=lastMonthsAvgByCat(3)[c.id];
-  openSheet({title:`${c.name} Budget`,ok:'Save',
+  openSheet({title:tr('bud.sheetTitle',{name:c.name}),ok:tr('common.save'),
    body:`<div style="text-align:center"><div class="bigic">${gl(c.emoji,40)}</div></div>
-    <div class="amount-wrap"><small>Monthly limit · ${esc(S.settings.currency)}</small><input id="b" class="amount-in" type="number" step="1" value="${c.budget||''}" placeholder="0"></div>
-    ${avg>0?`<div class="chips" style="justify-content:center"><button class="cc" id="sg">Suggest ${money(Math.ceil(avg*1.05/5)*5)} <span class="faint">· your usual is ${money(avg)}</span></button></div>`:''}
-    <div class="sec-f" style="text-align:center">Set to 0 to remove the budget.</div>`,
+    <div class="amount-wrap"><small>${trh('bud.limitIn',{currency:S.settings.currency})}</small><input id="b" class="amount-in" type="number" step="1" value="${c.budget||''}" placeholder="0"></div>
+    ${avg>0?`<div class="chips" style="justify-content:center"><button class="cc" id="sg">${esc(tr('bud.suggest',{amount:money(Math.ceil(avg*1.05/5)*5)}))} <span class="faint">· ${esc(tr('bud.usual',{amount:money(avg)}))}</span></button></div>`:''}
+    <div class="sec-f" style="text-align:center">${trh('bud.zeroD')}</div>`,
    mount:s=>{const g=$('#sg',s);if(g)g.onclick=()=>{$('#b',s).value=Math.ceil(avg*1.05/5)*5;};},
    onOk:s=>{c.budget=Math.max(0,parseFloat($('#b',s).value)||0);closeModal();changed();}});
 }
@@ -292,9 +292,9 @@ function parseCSV(text){
   row.push(cur);if(row.some(x=>x!==''))rows.push(row);return rows;
 }
 /* a split transaction is exported as one row per part (same date and payee), so category totals in a spreadsheet stay right */
-function txCSV(list){const rows=[];for(const t of list){const parts=t.type!=='transfer'&&t.splits&&t.splits.length>1?t.splits:[{category:t.category,amount:t.amount}];parts.forEach((p,i)=>rows.push([t.date,t.type,p.amount,t.merchant,t.type==='transfer'?'':cat(p.category).name,acc(t.accountId)?.name,t.toAccountId?acc(t.toAccountId)?.name:'',(t.note||'')+(parts.length>1?` (split ${i+1}/${parts.length})`:'')]));}
-  return toCSV([['Date','Type','Amount','Merchant','Category','Account','To account','Note'],...rows]);}
-async function exportCSV(list){const r=await saveFile(`penny-transactions-${today()}.csv`,txCSV(list),[{name:'CSV',extensions:['csv']}]);if(r)toast('Exported '+list.length+' transactions');}
+function txCSV(list){const rows=[];for(const t of list){const parts=t.type!=='transfer'&&t.splits&&t.splits.length>1?t.splits:[{category:t.category,amount:t.amount}];parts.forEach((p,i)=>rows.push([t.date,t.type,p.amount,t.merchant,t.type==='transfer'?'':cat(p.category).name,acc(t.accountId)?.name,t.toAccountId?acc(t.toAccountId)?.name:'',(t.note||'')+(parts.length>1?' ('+tr('csv.split',{i:String(i+1),n:String(parts.length)})+')':'')]));}
+  return toCSV([['csv.date','csv.type','csv.amount','csv.merchant','csv.category','csv.account','csv.to','csv.note'].map(k=>tr(k)),...rows]);}
+async function exportCSV(list){const r=await saveFile(`penny-transactions-${today()}.csv`,txCSV(list),[{name:'CSV',extensions:['csv']}]);if(r)toast(tr('csv.exported',{count:list.length}));}
 async function saveFile(name,content,filters){
   if(hasNative)return native.exportFile({name,content,filters});
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content]));a.download=name;a.click();return true;
@@ -350,34 +350,35 @@ function demoData(name){
   const bud={Groceries:450,Dining:220,Transport:150,Housing:1300,Utilities:180,Health:80,Shopping:200,Entertainment:100,Subscriptions:60,Travel:150};
   cats.forEach(c=>{if(bud[c.name])c.budget=bud[c.name]});
   const A={chk:uid(),sav:uid(),cash:uid(),cc:uid(),inv:uid()};
-  const accounts=[{id:A.chk,name:'Everyday Checking',type:'checking',opening:2300},{id:A.sav,name:'Rainy Day Savings',type:'savings',opening:8200},{id:A.cash,name:'Wallet',type:'cash',opening:480},{id:A.cc,name:'Visa Rewards',type:'credit',opening:-640,apr:19.9,minPay:120},{id:A.inv,name:'Index Fund',type:'investment',opening:9300}];
+  const D=k=>tr('demo.'+k);   // sample names follow the app language
+  const accounts=[{id:A.chk,name:D('chk'),type:'checking',opening:2300},{id:A.sav,name:D('sav'),type:'savings',opening:8200},{id:A.cash,name:D('wallet'),type:'cash',opening:480},{id:A.cc,name:'Visa Rewards',type:'credit',opening:-640,apr:19.9,minPay:120},{id:A.inv,name:D('index'),type:'investment',opening:9300}];
   const t0=today(),tx=[];const add=(d,type,a,m,c,ac)=>tx.push({id:uid(),date:d,type,amount:a,merchant:m,category:c,accountId:ac});
   for(let i=-125;i<=0;i++){const d=addDays(t0,i),dow=pd(d).getDay();
     if(i%4===0)add(d,'expense',between(28,96),pick(['Whole Foods','Aldi','Carrefour','Trader Joe\'s']),C('Groceries'),A.cc);
-    if(rnd()<.38)add(d,'expense',between(5,48),pick(['Starbucks','Starbucks','Chipotle','Sushi Zen','Pizza Hut','Local Café']),C('Dining'),pick([A.cc,A.cc,A.chk,A.cash]));
-    if(rnd()<.32)add(d,'expense',between(3,32),pick(['Uber','Shell','Uber','Metro Card']),C('Transport'),A.cc);
+    if(rnd()<.38)add(d,'expense',between(5,48),pick(['Starbucks','Starbucks','Chipotle','Sushi Zen','Pizza Hut',D('cafe')]),C('Dining'),pick([A.cc,A.cc,A.chk,A.cash]));
+    if(rnd()<.32)add(d,'expense',between(3,32),pick(['Uber','Shell','Uber',D('metro')]),C('Transport'),A.cc);
     if(rnd()<(dow===0||dow===6?.16:.05))add(d,'expense',between(18,150),pick(['Amazon','Zara','IKEA']),C('Shopping'),A.cc);
-    if(rnd()<.06)add(d,'expense',between(10,45),pick(['Cinema City','Steam','Concert Tickets']),C('Entertainment'),A.cc);
-    if(rnd()<.03)add(d,'expense',between(15,70),pick(['Pharmacy','Dr. Amin Clinic']),C('Health'),A.chk);
+    if(rnd()<.06)add(d,'expense',between(10,45),pick(['Cinema City','Steam',D('concert')]),C('Entertainment'),A.cc);
+    if(rnd()<.03)add(d,'expense',between(15,70),pick([D('pharmacy'),D('clinic')]),C('Health'),A.chk);
   }
   [-95,-65,-35,-6].forEach(o=>add(addDays(t0,o),'expense',14.95,'Audible',C('Subscriptions'),A.cc));
-  [-100,-70,-40,-10].forEach(o=>{const d=addDays(t0,o);tx.push({id:uid(),date:d,type:'transfer',amount:400,merchant:'Monthly saving',accountId:A.chk,toAccountId:A.sav});});
-  add(addDays(t0,-52),'income',480,'Logo project','' +C('Freelance'),A.chk);add(addDays(t0,-14),'income',650,'Website client',C('Freelance'),A.chk);
-  const defs=[['Rent',1250,'expense',1,'Housing',A.chk],['Salary',3600,'income',5,'Salary',A.chk],['Netflix',15.49,'expense',12,'Subscriptions',A.cc],['Spotify',10.99,'expense',15,'Subscriptions',A.cc],['Gym',39,'expense',3,'Health',A.chk],['Internet',59.9,'expense',20,'Utilities',A.chk],['Electricity',74,'expense',22,'Utilities',A.chk]];
+  [-100,-70,-40,-10].forEach(o=>{const d=addDays(t0,o);tx.push({id:uid(),date:d,type:'transfer',amount:400,merchant:D('saving'),accountId:A.chk,toAccountId:A.sav});});
+  add(addDays(t0,-52),'income',480,D('logo'),'' +C('Freelance'),A.chk);add(addDays(t0,-14),'income',650,D('website'),C('Freelance'),A.chk);
+  const defs=[[D('rent'),1250,'expense',1,'Housing',A.chk],[D('salary'),3600,'income',5,'Salary',A.chk],['Netflix',15.49,'expense',12,'Subscriptions',A.cc],['Spotify',10.99,'expense',15,'Subscriptions',A.cc],[D('gym'),39,'expense',3,'Health',A.chk],[D('internet'),59.9,'expense',20,'Utilities',A.chk],[D('electricity'),74,'expense',22,'Utilities',A.chk]];
   const bills=defs.map(([n,a,ty,day,c,ac])=>{
     const b={id:uid(),name:n,amount:a,type:ty,freq:'monthly',anchor:day,category:C(c),accountId:ac,auto:true,next:null};
     const base=ymd(new Date(pd(t0).getFullYear(),pd(t0).getMonth(),1));
     for(let k=-5;k<=2;k++){const d=addMonths(base,k,day);if(d<=t0&&d>=addDays(t0,-125))tx.push({id:uid(),billId:b.id,date:d,type:ty,amount:a,merchant:n,category:b.category,accountId:ac,note:'Recurring'});else if(d>t0&&!b.next)b.next=d;}
     return b;});
   const rem=(title,kind,off,time,repeat,amount,ac,cc)=>({id:uid(),title,kind,date:addDays(t0,off),next:addDays(t0,off),time,repeat,lead:kind==='rent'?1440:60,sound:'chime',notes:'',amount:amount||0,accountId:ac||'',category:cc||'',done:false,firedFor:'',snooze:0,anchor:pd(addDays(t0,off)).getDate()});
-  const reminders=[rem('Pay rent','rent',3,'09:00','monthly',1250,A.chk,C('Housing')),rem('Dentist appointment','appt',2,'15:30','none'),rem('Take vitamins','med',0,'20:00','daily'),rem('Mum\'s birthday','bday',9,'','yearly'),rem('Pay electricity bill','bill',5,'','monthly',62,A.chk,C('Utilities')),rem('Review monthly budget','task',12,'18:00','monthly')];
+  const reminders=[rem(D('r.rent'),'rent',3,'09:00','monthly',1250,A.chk,C('Housing')),rem(D('r.dentist'),'appt',2,'15:30','none'),rem(D('r.vitamins'),'med',0,'20:00','daily'),rem(D('r.bday'),'bday',9,'','yearly'),rem(D('r.elec'),'bill',5,'','monthly',62,A.chk,C('Utilities')),rem(D('r.review'),'task',12,'18:00','monthly')];
   tx.sort((a,b)=>a.date<b.date?-1:1);
   return{version:1,settings:{...DEFAULT_SETTINGS,name,widgets:DEFAULT_SETTINGS.widgets.map(w=>({...w}))},accounts,categories:cats,transactions:tx,bills,reminders,
-    goals:[{id:uid(),name:'Emergency fund',emoji:'🛡️',target:15000,saved:8200,deadline:addDays(t0,330),color:PALETTE[0]},{id:uid(),name:'Japan trip',emoji:'✈️',target:4000,saved:1350,deadline:addDays(t0,210),color:PALETTE[1]},{id:uid(),name:'New laptop',emoji:'💻',target:2200,saved:900,deadline:addDays(t0,120),color:PALETTE[2]}]};
+    goals:[{id:uid(),name:D('g.emergency'),emoji:'🛡️',target:15000,saved:8200,deadline:addDays(t0,330),color:PALETTE[0]},{id:uid(),name:D('g.trip'),emoji:'✈️',target:4000,saved:1350,deadline:addDays(t0,210),color:PALETTE[1]},{id:uid(),name:D('g.laptop'),emoji:'💻',target:2200,saved:900,deadline:addDays(t0,120),color:PALETTE[2]}]};
 }
 function freshData(name){
   const cats=JSON.parse(JSON.stringify(DEFAULT_CATS));
-  return{version:1,settings:{...DEFAULT_SETTINGS,name,widgets:DEFAULT_SETTINGS.widgets.map(w=>({...w}))},accounts:[{id:uid(),name:'Cash',type:'cash',opening:0}],categories:cats,transactions:[],bills:[],goals:[],reminders:[],rules:[],snapshots:[]};
+  return{version:1,settings:{...DEFAULT_SETTINGS,name,widgets:DEFAULT_SETTINGS.widgets.map(w=>({...w}))},accounts:[{id:uid(),name:tr('acct.cash'),type:'cash',opening:0}],categories:cats,transactions:[],bills:[],goals:[],reminders:[],rules:[],snapshots:[]};
 }
 
 /* ---------- PIN lock ---------- */

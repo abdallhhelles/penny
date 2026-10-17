@@ -10,12 +10,12 @@ const MONETIZATION={
   freeLimits:{accounts:3,goals:2}
 };
 const PRO_FEATURES=[
-  {id:'accounts',icon:'card',color:'#BF5AF2',n:'Unlimited accounts & goals',d:'Free includes 3 accounts and 2 goals'},
-  {id:'plan',icon:'bolt',color:'#FF9F0A',n:'Projections: debt payoff & what-if',d:'Avalanche vs snowball, future net worth, goal ETAs'},
-  {id:'encrypt',icon:'lock',color:'#5E5CE6',n:'Encrypted exports',d:'AES-256 password-protected backups'},
-  {id:'backgrounds',icon:'palette',color:'#FF375F',n:'Premium backgrounds',d:'Sunset, Ocean, Forest, Graphite, Mono and more'},
-  {id:'insightsPlus',icon:'sparkles',color:'#30D158',n:'Deep insights',d:'Price-hike alerts, double-charge detection, anomalies'},
-  {id:'support',icon:'star',color:'#FFD60A',n:'Priority support & early features',d:'Help first, and a say in what we build next'}
+  {id:'accounts',icon:'card',color:'#BF5AF2',get n(){return tr('pro.pf.accounts')},get d(){return tr('pro.pf.accountsD')}},
+  {id:'plan',icon:'bolt',color:'#FF9F0A',get n(){return tr('pro.pf.plan')},get d(){return tr('pro.pf.planD')}},
+  {id:'encrypt',icon:'lock',color:'#5E5CE6',get n(){return tr('pro.pf.encrypt')},get d(){return tr('pro.pf.encryptD')}},
+  {id:'backgrounds',icon:'palette',color:'#FF375F',get n(){return tr('pro.pf.backgrounds')},get d(){return tr('pro.pf.backgroundsD')}},
+  {id:'insightsPlus',icon:'sparkles',color:'#30D158',get n(){return tr('pro.pf.insightsPlus')},get d(){return tr('pro.pf.insightsPlusD')}},
+  {id:'support',icon:'star',color:'#FFD60A',get n(){return tr('pro.pf.support')},get d(){return tr('pro.pf.supportD')}}
 ];
 let LIC={plan:'free',ok:false};
 const isPro=()=>!MONETIZATION.enabled||(LIC.ok&&LIC.plan==='pro');
@@ -44,14 +44,14 @@ function openProSoon(){
 
 function openUpgrade(focus){
   if(proSoon())return openProSoon();
-  openSheet({title:'Penny Pro',ok:null,cancel:'Close',body:`
+  openSheet({title:tr('pro.title'),ok:null,cancel:tr('common.close'),body:`
    <div style="text-align:center;margin:2px 0 18px"><div class="logo" style="margin:0 auto 12px;width:64px;height:64px;border-radius:20px">${LOGO_SVG(64)}</div>
-    <h2 style="font-size:26px;letter-spacing:-.6px;margin:0">Penny Pro</h2><p class="muted" style="margin:6px 0 0">Everything in Penny, with no limits.</p></div>
+    <h2 style="font-size:26px;letter-spacing:-.6px;margin:0">${trh('pro.title')}</h2><p class="muted" style="margin:6px 0 0">${trh('pro.paid.sub')}</p></div>
    <div class="group" style="margin-bottom:14px">${PRO_FEATURES.map(f=>`<div class="li noicon ${f.id===focus?'hl':''}" style="min-height:54px"><div class="sq ico sm" style="--c:${f.color}">${icon(f.icon,16)}</div><div class="grow"><b>${f.n}</b><small>${f.d}</small></div>${icon('check',16,2.6)}</div>`).join('')}</div>
-   ${MONETIZATION.purchaseUrl?`<div class="plans">${[['monthly','Monthly'],['yearly','Yearly'],['lifetime','Lifetime']].map(([k,l])=>`<div class="plan ${k==='yearly'?'on':''}" data-plan="${k}"><small>${l}</small><b>${MONETIZATION.price[k]}</b></div>`).join('')}</div><button class="btn pri" id="buy" style="width:100%;height:50px;font-size:16px;margin-top:12px">Get Penny Pro</button>`:`<div class="sec-f" style="text-align:center;margin-top:0">Paid plans aren't available yet.</div>`}
-   <div class="sec-h" style="margin-top:20px">Have a license key?</div>
+   ${MONETIZATION.purchaseUrl?`<div class="plans">${[['monthly',tr('pro.paid.monthly')],['yearly',tr('pro.paid.yearly')],['lifetime',tr('pro.paid.lifetime')]].map(([k,l])=>`<div class="plan ${k==='yearly'?'on':''}" data-plan="${k}"><small>${l}</small><b>${MONETIZATION.price[k]}</b></div>`).join('')}</div><button class="btn pri" id="buy" style="width:100%;height:50px;font-size:16px;margin-top:12px">${trh('pro.paid.get')}</button>`:`<div class="sec-f" style="text-align:center;margin-top:0">${trh('pro.paid.none')}</div>`}
+   <div class="sec-h" style="margin-top:20px">${trh('pro.paid.haveKey')}</div>
    <div class="fg"><div class="fr"><input id="lk" placeholder="PENNY-…" autocomplete="off" spellcheck="false"></div></div>
-   <button class="btn" id="act" style="width:100%;margin-top:10px">Activate</button>`,
+   <button class="btn" id="act" style="width:100%;margin-top:10px">${trh('pro.paid.activate')}</button>`,
    mount(s){
     $$('.plan',s).forEach(p=>p.onclick=()=>{$$('.plan',s).forEach(x=>x.classList.toggle('on',x===p));});
     const buy=$('#buy',s);if(buy)buy.onclick=()=>window.open(MONETIZATION.purchaseUrl+'?plan='+($('.plan.on',s)?.dataset.plan||'yearly'));
@@ -59,10 +59,10 @@ function openUpgrade(focus){
    }});
 }
 async function activateKey(key,close){
-  key=String(key||'').trim();if(!key){toast('Paste your license key first');return false;}
-  if(!(typeof hasNative!=='undefined'&&hasNative&&native.licenseActivate)){toast('Activation works in the installed app');return false;}
+  key=String(key||'').trim();if(!key){toast(tr('pro.paid.paste'));return false;}
+  if(!(typeof hasNative!=='undefined'&&hasNative&&native.licenseActivate)){toast(tr('pro.paid.installed'));return false;}
   const r=await native.licenseActivate(key);
-  if(!r.ok){toast({format:'That key is not valid',signature:'That key is not valid',expired:'That license has expired'}[r.reason]||'That key is not valid');return false;}
-  await loadLicense();if(close)closeModal();toast('Penny Pro activated — thank you!');if(typeof refresh==='function')refresh();return true;
+  if(!r.ok){toast(tr(r.reason==='expired'?'pro.paid.expired':'pro.paid.invalid'));return false;}
+  await loadLicense();if(close)closeModal();toast(tr('pro.paid.done'));if(typeof refresh==='function')refresh();return true;
 }
-async function removeLicense(){if(hasNative&&native.licenseRemove)await native.licenseRemove();await loadLicense();toast('License removed from this PC');if(typeof refresh==='function')refresh();}
+async function removeLicense(){if(hasNative&&native.licenseRemove)await native.licenseRemove();await loadLicense();toast(tr('pro.paid.removed'));if(typeof refresh==='function')refresh();}

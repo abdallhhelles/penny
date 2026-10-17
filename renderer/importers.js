@@ -35,14 +35,14 @@
   }
 
   const HEAD = {
-    date: ['posting date', 'transaction date', 'trans date', 'booking date', 'date', 'fecha', 'تاريخ'],
-    desc: ['description', 'merchant', 'payee', 'name', 'details', 'narrative', 'memo', 'reference', 'concepto', 'descripcion', 'وصف', 'البيان'],
-    amount: ['amount', 'value', 'sum', 'importe', 'monto', 'المبلغ'],
-    debit: ['debit', 'withdrawal', 'paid out', 'money out', 'cargo', 'مدين'],
-    credit: ['credit', 'deposit', 'paid in', 'money in', 'abono', 'دائن'],
-    category: ['category', 'categoria', 'فئة'],
-    type: ['type', 'tipo', 'نوع'],
-    currency: ['currency', 'moneda', 'عملة']
+    date: ['posting date', 'transaction date', 'trans date', 'booking date', 'date', 'fecha', 'تاريخ', '日期', 'तारीख', 'दिनांक'],
+    desc: ['description', 'merchant', 'payee', 'name', 'details', 'narrative', 'memo', 'reference', 'concepto', 'descripcion', 'comercio', 'وصف', 'البيان', '描述', '摘要', '商户', '收款方', 'विवरण', 'व्यापारी', 'प्राप्तकर्ता'],
+    amount: ['amount', 'value', 'sum', 'importe', 'monto', 'المبلغ', '金额', 'राशि'],
+    debit: ['debit', 'withdrawal', 'paid out', 'money out', 'cargo', 'مدين', '支出', '借方', 'डेबिट', 'निकासी'],
+    credit: ['credit', 'deposit', 'paid in', 'money in', 'abono', 'دائن', '收入', '贷方', 'क्रेडिट', 'जमा'],
+    category: ['category', 'categoria', 'فئة', '类别', '分类', 'श्रेणी'],
+    type: ['type', 'tipo', 'نوع', '类型', 'प्रकार'],
+    currency: ['currency', 'moneda', 'عملة', '币种', '货币', 'मुद्रा']
   };
   const foldH = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').trim();
   function guessColumns(head) {

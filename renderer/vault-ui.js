@@ -133,7 +133,7 @@ function showRecoveryKey(key,{upgraded=false}={}){
     <button class="btn pri" id="rk_done" disabled style="width:100%;height:46px;margin-top:12px">${trh('rk.done')}</button></div></div>`,s=>{
     $('#modal').onmousedown=null;
     $('#rk_c',s).onclick=async()=>{try{await navigator.clipboard.writeText(key);toast(tr('about.copied'));}catch{}};
-    const sv=$('#rk_s',s);if(sv)sv.onclick=async()=>{await native.exportFile({name:'Penny recovery key.txt',content:tr('rk.fileText',{key,date:new Date().toLocaleDateString(I18N.lang)})+'\r\n',filters:[{name:'Text',extensions:['txt']}]});};
+    const sv=$('#rk_s',s);if(sv)sv.onclick=async()=>{await native.exportFile({name:tr('rk.fileName')+'.txt',content:tr('rk.fileText',{key,date:new Date().toLocaleDateString(I18N.lang)})+'\r\n',filters:[{name:'Text',extensions:['txt']}]});};
     $('#rk_ok',s).onchange=e=>{$('#rk_done',s).disabled=!e.target.checked;};
     $('#rk_done',s).onclick=()=>{closeModal();toast(tr('rk.saved'));};
   });

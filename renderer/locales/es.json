@@ -528,7 +528,7 @@
   "import.dups": " · {count} duplicados omitidos",
   "import.bad": " · {count} ilegibles",
   "rules.title": "Reglas y automatización",
-  "rules.footer": "Penny elige la categoría en este orden: tus reglas → lo que ya archivaste con el mismo comercio → palabras clave integradas (inglés, español, árabe) → «Otros». Las reglas nunca cambian importes ni fechas; solo categorías y nombres de comercio.",
+  "rules.footer": "Penny elige la categoría en este orden: tus reglas → lo que ya archivaste con el mismo comercio → palabras clave integradas (inglés, chino, hindi, español, árabe) → «Otros». Las reglas nunca cambian importes ni fechas; solo categorías y nombres de comercio.",
   "rules.none": "Aún no hay reglas. Añade una abajo o deja que Penny sugiera reglas a partir de tu historial.",
   "rules.edit": "Editar",
   "rules.enabled": "Regla activa",

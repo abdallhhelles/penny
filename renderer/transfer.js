@@ -4,7 +4,7 @@
    File extension: .penny  (plain JSON inside, optionally AES-256 encrypted)
    ========================================================= */
 const EXPORT_EXT='penny';
-const EXPORT_FILTERS=[{name:'Penny export',extensions:['penny','lumivault','json']}];
+const EXPORT_FILTERS=[{get name(){return tr('exp.fileType')},extensions:['penny','lumivault','json']}];
 
 function toB64(buf){const u=new Uint8Array(buf);let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s);}
 function fromB64(s){const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
@@ -47,17 +47,17 @@ function sanitizeData(d){
   const before=d.transactions.length;
   d.transactions=d.transactions.filter(t=>t&&typeof t.id==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(t.date)&&Number.isFinite(t.amount)&&['income','expense','transfer'].includes(t.type)&&okAcc.has(t.accountId)&&(t.type!=='transfer'||okAcc.has(t.toAccountId)));
   const dropped=before-d.transactions.length;
-  if(dropped)warn.push(`${dropped} damaged transaction${dropped>1?'s were':' was'} skipped.`);
+  if(dropped)warn.push(tr('imp.w.dropped',{count:dropped}));
   let fixed=0;
   for(const t of d.transactions){if(t.type!=='transfer'&&!catIds.has(t.category)){t.category=fb(t.type==='income'?'income':'expense');fixed++;}}
-  if(fixed)warn.push(`${fixed} transaction${fixed>1?'s were':' was'} moved to “Other” (category missing).`);
+  if(fixed)warn.push(tr('imp.w.fixed',{count:fixed}));
   let badSplit=0;
   for(const t of d.transactions){
     if(t.fitid!==undefined&&typeof t.fitid!=='string')delete t.fitid;
     if(t.files!==undefined){const ok=Array.isArray(t.files)?t.files.filter(f=>f&&/^[a-f0-9]{24}$/.test(f.id)&&typeof f.name==='string'&&/^[a-z0-9]{1,5}$/.test(f.ext)&&Number.isFinite(f.size)).slice(0,30).map(f=>({id:f.id,name:f.name.slice(0,120),ext:f.ext,size:f.size,added:typeof f.added==='string'?f.added.slice(0,10):''})):[];if(ok.length)t.files=ok;else delete t.files;}
     if(t.splits!==undefined){const ok=t.type!=='transfer'&&Array.isArray(t.splits)&&t.splits.every(x=>x&&Number.isFinite(x.amount)&&catIds.has(x.category))&&Finance.validateSplits(t.amount,t.splits).ok;if(!ok){delete t.splits;badSplit++;}}
   }
-  if(badSplit)warn.push(`${badSplit} split transaction${badSplit>1?'s were':' was'} kept as a single category (the parts did not add up).`);
+  if(badSplit)warn.push(tr('imp.w.split',{count:badSplit}));
   d.bills=(d.bills||[]).filter(b=>b&&typeof b.id==='string'&&Number.isFinite(b.amount)&&/^\d{4}-\d{2}-\d{2}$/.test(b.next)&&FREQ[b.freq]&&okAcc.has(b.accountId));
   d.goals=(d.goals||[]).filter(g=>g&&typeof g.id==='string'&&Number.isFinite(g.target));
   const st=d.settings;
@@ -73,27 +73,27 @@ function sanitizeData(d){
 }
 async function parseImport(text,password){
   let j;
-  try{j=JSON.parse(text);}catch{throw new Error('That file could not be read. Is it a Penny export?');}
+  try{j=JSON.parse(text);}catch{throw new Error(tr('imp.e.read'));}
   let data,meta={},warn=[];
   if(j&&(j.format==='penny-export'||j.format==='lumivault-export')){
     meta={schema:j.schema,appVersion:j.appVersion,exportedAt:j.exportedAt,encrypted:!!j.encrypted,settingsIncluded:j.settingsIncluded!==false};
-    if(j.schema>SCHEMA)throw new Error(`This file was made by a newer version of Penny (data format ${j.schema}). Update Penny, then try again.`);
+    if(j.schema>SCHEMA)throw new Error(tr('imp.e.newerFmt',{schema:String(j.schema)}));
     if(j.encrypted){
-      if(!password){const e=new Error('This file is password-protected.');e.needPassword=true;throw e;}
+      if(!password){const e=new Error(tr('imp.e.locked'));e.needPassword=true;throw e;}
       try{
         const key=await deriveKey(password,fromB64(j.kdf.salt),j.kdf.iterations);
         const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:fromB64(j.iv)},key,fromB64(j.cipher));
         data=JSON.parse(new TextDecoder().decode(pt));
-      }catch{const e=new Error('Wrong password, or the file is damaged.');e.badPassword=true;throw e;}
+      }catch{const e=new Error(tr('imp.e.badPw'));e.badPassword=true;throw e;}
     }else{
       data=j.data;
-      if(j.checksum&&data&&await sha256Hex(JSON.stringify(data))!==j.checksum)warn.push('The file’s checksum does not match. It may have been edited or damaged.');
+      if(j.checksum&&data&&await sha256Hex(JSON.stringify(data))!==j.checksum)warn.push(tr('imp.w.checksum'));
     }
   }else if(j&&Array.isArray(j.accounts)&&Array.isArray(j.transactions)){
-    data=j;meta={legacy:true,settingsIncluded:true,exportedAt:null,appVersion:'earlier version'};
-  }else throw new Error('This is not a Penny export file.');
-  if(!data||!Array.isArray(data.accounts)||!Array.isArray(data.transactions))throw new Error('The file is missing its accounts or transactions.');
-  if((data.schema||data.version||1)>SCHEMA)throw new Error('This data was made by a newer version of Penny. Update Penny, then try again.');
+    data=j;meta={legacy:true,settingsIncluded:true,exportedAt:null,appVersion:tr('imp.earlier')};
+  }else throw new Error(tr('imp.e.notPenny'));
+  if(!data||!Array.isArray(data.accounts)||!Array.isArray(data.transactions))throw new Error(tr('imp.e.missing'));
+  if((data.schema||data.version||1)>SCHEMA)throw new Error(tr('imp.e.newer'));
   warn.push(...sanitizeData(data));
   data=normalize(data);
   const dates=data.transactions.map(t=>t.date).sort();
@@ -146,30 +146,30 @@ function mergeData(inc){
 /* ---------- UI: export sheet ---------- */
 function openExportSheet(){
   const c=dataCounts(S);
-  openSheet({title:'Export Data',ok:'Export',body:`
-    <p class="muted" style="text-align:center;margin:0 0 18px">Save everything to one file you can import into any newer version of Penny, or on another PC.</p>
+  openSheet({title:tr('exp.title'),ok:tr('exp.ok'),body:`
+    <p class="muted" style="text-align:center;margin:0 0 18px">${trh('exp.sub')}</p>
     <div class="fg" style="margin-bottom:6px">
-      <div class="fr"><label style="flex:1;min-width:0">Include settings &amp; appearance<small class="muted" style="display:block;font-size:12.5px">Theme, accent, dashboard layout, passcode</small></label><label class="switch tog"><input type="checkbox" id="xs" checked><i></i></label></div>
-      <div class="fr"><label style="flex:1;min-width:0">Protect with a password<small class="muted" style="display:block;font-size:12.5px">Encrypts the file with AES-256</small></label><label class="switch tog"><input type="checkbox" id="xp"><i></i></label></div>
-      <div class="fr" id="xr1" style="display:none"><label>Password</label><input id="xpw" type="password" placeholder="At least 6 characters" autocomplete="new-password"></div>
-      <div class="fr" id="xr2" style="display:none"><label>Confirm</label><input id="xpw2" type="password" placeholder="Repeat password" autocomplete="new-password"></div>
+      <div class="fr"><label style="flex:1;min-width:0">${trh('exp.settings')}<small class="muted" style="display:block;font-size:12.5px">${trh('exp.settingsD')}</small></label><label class="switch tog"><input type="checkbox" id="xs" checked><i></i></label></div>
+      <div class="fr"><label style="flex:1;min-width:0">${trh('exp.pw')}<small class="muted" style="display:block;font-size:12.5px">${trh('exp.pwD')}</small></label><label class="switch tog"><input type="checkbox" id="xp"><i></i></label></div>
+      <div class="fr" id="xr1" style="display:none"><label>${trh('exp.password')}</label><input id="xpw" type="password" placeholder="${trh('exp.pwPh')}" autocomplete="new-password"></div>
+      <div class="fr" id="xr2" style="display:none"><label>${trh('exp.confirm')}</label><input id="xpw2" type="password" placeholder="${trh('exp.pwPh2')}" autocomplete="new-password"></div>
     </div>
-    <div class="sec-f" id="xwarn" style="display:none;margin-top:6px;color:var(--orange)">Keep this password safe. Penny cannot recover an encrypted export without it.</div>
-    <div class="sec-f" style="margin-top:12px;text-align:center">${c.accounts} accounts · ${num(c.transactions)} transactions · ${c.categories} categories · ${c.goals} goals · ${c.bills} recurring · ${c.reminders} reminders</div>`,
+    <div class="sec-f" id="xwarn" style="display:none;margin-top:6px;color:var(--orange)">${trh('exp.pwWarn')}</div>
+    <div class="sec-f" style="margin-top:12px;text-align:center">${esc([tr('cnt.accounts',{count:c.accounts}),tr('cnt.tx',{count:c.transactions}),tr('cnt.cats',{count:c.categories}),tr('cnt.goals',{count:c.goals}),tr('cnt.bills',{count:c.bills}),tr('cnt.rems',{count:c.reminders})].join(' · '))}</div>`,
   mount(s){
-    $('#xp',s).onchange=e=>{if(e.target.checked&&!can('encrypt')){e.target.checked=false;toast('Encrypted exports are a Pro feature');return;}const on=e.target.checked;$('#xr1',s).style.display=$('#xr2',s).style.display=$('#xwarn',s).style.display=on?'':'none';if(on)$('#xpw',s).focus();};
+    $('#xp',s).onchange=e=>{if(e.target.checked&&!can('encrypt')){e.target.checked=false;toast(tr('exp.pro'));return;}const on=e.target.checked;$('#xr1',s).style.display=$('#xr2',s).style.display=$('#xwarn',s).style.display=on?'':'none';if(on)$('#xpw',s).focus();};
   },
   async onOk(s){
     const pw=$('#xp',s).checked?$('#xpw',s).value:'';
     if($('#xp',s).checked){
-      if(pw.length<6){toast('Use a password of at least 6 characters');return;}
-      if(pw!==$('#xpw2',s).value){toast('The passwords do not match');return;}
+      if(pw.length<6){toast(tr('exp.pwShort'));return;}
+      if(pw!==$('#xpw2',s).value){toast(tr('exp.pwMismatch'));return;}
     }
     try{
       const text=await buildExport({settings:$('#xs',s).checked,password:pw});
       const r=await saveFile(`penny-export-${today()}.${EXPORT_EXT}`,text,EXPORT_FILTERS);
-      if(r){closeModal();toast(pw?'Encrypted export saved':'Export saved');}
-    }catch(e){console.error(e);toast('Could not create the export');}
+      if(r){closeModal();toast(tr(pw?'exp.savedEnc':'exp.saved'));}
+    }catch(e){console.error(e);toast(tr('exp.failed'));}
   }});
 }
 
@@ -186,28 +186,28 @@ async function tryImport(text,password){
   }catch(e){
     if(e.needPassword||e.badPassword){
       if(e.badPassword)toast(e.message);
-      openSheet({title:'Password Required',ok:'Unlock',body:`<p class="muted" style="text-align:center;margin:0 0 14px">This export is password-protected.</p><div class="fg"><div class="fr"><label>Password</label><input id="ip" type="password" autocomplete="off"></div></div>`,
+      openSheet({title:tr('imp.pwTitle'),ok:tr('lock.unlock'),body:`<p class="muted" style="text-align:center;margin:0 0 14px">${trh('imp.pwSub')}</p><div class="fg"><div class="fr"><label>${trh('exp.password')}</label><input id="ip" type="password" autocomplete="off"></div></div>`,
         onOk(s){const p=$('#ip',s).value;if(!p)return;closeModal();tryImport(text,p);}});
-    }else toast(e.message||'Could not read that file',{ms:5000});
+    }else toast(e.message||tr('imp.e.generic'),{ms:5000});
   }
 }
 function openImportPreview({data,meta,warn}){
   const c=meta.counts,fmt=d=>d?dshort(d):'';
-  const range=meta.from?`${dlong(meta.from)} → ${dlong(meta.to)}`:'No transactions';
+  const range=meta.from?`${dlong(meta.from)} → ${dlong(meta.to)}`:tr('imp.noTx');
   let mode='replace';
-  openSheet({title:'Import Data',ok:'Import',body:`
+  openSheet({title:tr('imp.title'),ok:tr('imp.ok'),body:`
     <div class="group" style="box-shadow:none;margin-bottom:14px">
-      <div class="li noicon"><div class="grow"><b>${meta.exportedAt?'Exported '+esc(FMT.dateTime(meta.exportedAt)):'Backup file'}</b><small>From Penny ${esc(String(meta.appVersion||''))}${meta.encrypted?' · encrypted':''}</small></div></div>
-      <div class="li noicon"><div class="grow">Accounts</div><div class="end">${c.accounts}</div></div>
-      <div class="li noicon"><div class="grow">Transactions<small>${esc(range)}</small></div><div class="end">${num(c.transactions)}</div></div>
-      <div class="li noicon"><div class="grow">Categories · Goals · Recurring</div><div class="end">${c.categories} · ${c.goals} · ${c.bills}</div></div>
+      <div class="li noicon"><div class="grow"><b>${meta.exportedAt?trh('imp.exported',{date:FMT.dateTime(meta.exportedAt)}):trh('imp.backup')}</b><small>${trh('imp.from',{version:String(meta.appVersion||'')})}${meta.encrypted?' · '+trh('imp.encrypted'):''}</small></div></div>
+      <div class="li noicon"><div class="grow">${trh('nav.accounts')}</div><div class="end">${c.accounts}</div></div>
+      <div class="li noicon"><div class="grow">${trh('nav.transactions')}<small>${esc(range)}</small></div><div class="end">${num(c.transactions)}</div></div>
+      <div class="li noicon"><div class="grow">${trh('imp.cgr')}</div><div class="end">${c.categories} · ${c.goals} · ${c.bills}</div></div>
     </div>
-    ${warn.length?`<div class="insight warn" style="margin:0 0 14px;border-radius:16px;background:var(--fill)"><div class="e">${icon('alert',20)}</div><div><b>Heads up</b>${warn.map(w=>`<span style="display:block">${esc(w)}</span>`).join('')}</div></div>`:''}
-    <div class="seg" id="im" style="margin-bottom:10px"><button class="on" data-m="replace">Replace everything</button><button data-m="merge">Merge with current</button></div>
+    ${warn.length?`<div class="insight warn" style="margin:0 0 14px;border-radius:16px;background:var(--fill)"><div class="e">${icon('alert',20)}</div><div><b>${trh('imp.heads')}</b>${warn.map(w=>`<span style="display:block">${esc(w)}</span>`).join('')}</div></div>`:''}
+    <div class="seg" id="im" style="margin-bottom:10px"><button class="on" data-m="replace">${trh('imp.replace')}</button><button data-m="merge">${trh('imp.merge')}</button></div>
     <p class="muted" id="imd" style="font-size:13.5px;margin:0"></p>
-    <div class="fg" id="isw" style="margin-top:14px;display:none"><div class="fr"><label style="flex:1;min-width:0">Also import settings &amp; appearance</label><label class="switch tog"><input type="checkbox" id="ist"><i></i></label></div></div>`,
+    <div class="fg" id="isw" style="margin-top:14px;display:none"><div class="fr"><label style="flex:1;min-width:0">${trh('imp.alsoSettings')}</label><label class="switch tog"><input type="checkbox" id="ist"><i></i></label></div></div>`,
   mount(s){
-    const desc={replace:'Your current data is replaced by the file. A safety backup of what you have now is saved first.',merge:'Adds what is missing. Accounts and categories with the same name are matched, and transactions you already have are skipped, so nothing is duplicated. Your current settings are kept.'};
+    const desc={replace:tr('imp.replaceD'),merge:tr('imp.mergeD')};
     const upd=()=>{$$('#im button',s).forEach(b=>b.classList.toggle('on',b.dataset.m===mode));$('#imd',s).textContent=desc[mode];$('#isw',s).style.display=mode==='merge'&&meta.settingsIncluded?'':'none';};
     $$('#im button',s).forEach(b=>b.onclick=()=>{mode=b.dataset.m;upd();});upd();
   },
@@ -217,13 +217,13 @@ function openImportPreview({data,meta,warn}){
     if(mode==='replace'){
       if(!meta.settingsIncluded)data.settings=S.settings;
       if(!await replaceData(data))return;
-      toast(`Imported ${num(c.transactions)} transactions`,{ms:4000});
+      toast(tr('imp.done',{count:c.transactions}),{ms:4000});
     }else{
-      if(hasNative){const sr=await native.snapshot('before-change');if(sr&&sr.ok===false&&sr.error!=='no-data'){toast('Couldn’t save a safety backup first, so nothing was changed.',{ms:6000});return;}}
+      if(hasNative){const sr=await native.snapshot('before-change');if(sr&&sr.ok===false&&sr.error!=='no-data'){toast(tr('err.noSafety'),{ms:6000});return;}}
       const r=mergeData(data);
       if(withSettings&&meta.settingsIncluded){const keepPin={pin:S.settings.pin,salt:S.settings.salt};S.settings={...data.settings,...keepPin};applySettings();}
       changed();
-      toast(`Merged: ${num(r.transactions)} new transactions, ${r.accounts} accounts${r.skipped?` · ${r.skipped} duplicates skipped`:''}`,{ms:5200});
+      toast(tr('imp.merged',{tx:num(r.transactions),acc:String(r.accounts)})+(r.skipped?' · '+tr('imp.skipped',{count:r.skipped}):''),{ms:5200});
     }
   }});
 }

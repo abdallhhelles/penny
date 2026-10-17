@@ -48,7 +48,7 @@ const WHY={
   recurring(){return{value:String(detectRecurringAll().length),f:tr('why.recurring.f'),inputs:[],bench:null,notes:[tr('why.recurring.n')]};}
 };
 function basisText(p){return p.partial?tr('why.basis.partial'):tr('why.basis.avg',{n:p.periods});}
-const whyBtn=(key,arg='',label='')=>`<button type="button" class="whybtn" data-why="${key}" ${arg?`data-arg="${esc(arg)}"`:''} aria-label="${trh('why.aria',{what:label||tr('why.'+key+'.t')})}" title="${trh('why.how')}">${icon('help',14,2)}</button>`;
+const whyBtn=(key,arg='',label='')=>`<button type="button" class="whybtn" data-why="${key}" ${arg?`data-arg="${esc(arg)}"`:''} aria-label="${esc(tr('why.aria',{what:label||tr('why.'+key+'.t')}))}" title="${trh('why.how')}">${icon('help',14,2)}</button>`;
 function openWhy(key,arg){
   const w=WHY[key]&&WHY[key](arg);if(!w)return;
   const kv=w.inputs.length?`<div class="sec-h" style="margin-top:14px">${trh('why.inputs')}</div><div class="group flat">${w.inputs.map(([k,v])=>`<div class="kv" style="padding:9px 16px"><span>${esc(k)}</span><b dir="auto">${esc(v)}</b></div>`).join('')}</div>`:'';

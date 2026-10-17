@@ -181,6 +181,7 @@ function trayMenu() {
     { label: mt('tray.hideAmounts'), click: () => { send('privacy'); } },
     { label: mt('tray.lock'), click: () => { showWin(); send('lock'); } },
     { type: 'separator' },
+    { label: mt('tray.about', { publisher: PUB.name }), click: () => { showWin(); send('navigate', { page: 'settings', scat: 'about' }); } },
     { label: mt('tray.quit'), click: () => { quitting = true; app.quit(); } }
   ]);
 }
@@ -197,18 +198,7 @@ function makeTray() {
   try {
     tray = new Tray(trayImage());
     tray.setToolTip('Penny');
-    const menu = () => Menu.buildFromTemplate([
-      { label: 'Open Penny', click: showWin },
-      { label: 'Add expense', accelerator: sys.hotkey ? sys.hotkeyAccel : undefined, click: () => quickAdd('expense') },
-      { label: 'Add income', click: () => quickAdd('income') },
-      { type: 'separator' },
-      { label: 'Hide amounts', click: () => { send('privacy'); } },
-      { label: 'Lock Penny', click: () => { showWin(); send('lock'); } },
-      { type: 'separator' },
-      { label: `About Penny (${PUB.name})`, click: () => { showWin(); send('navigate', { page: 'settings', scat: 'about' }); } },
-      { label: 'Quit Penny', click: () => { quitting = true; app.quit(); } }
-    ]);
-    tray.setContextMenu(menu());
+    tray.setContextMenu(trayMenu());   // translated from the first moment (was English until a language change)
     tray.on('click', () => { if (win && win.isVisible() && win.isFocused()) win.hide(); else showWin(); });
   } catch { tray = null; }
 }
@@ -428,7 +418,7 @@ else {
     /* the current page as a PDF (Financial Health Report). The renderer switches to its print layout first. */
     ipcMain.handle('file:pdf', async (_e, name) => {
       if (!win) return false;
-      const r = await dialog.showSaveDialog(win, { defaultPath: String(name || 'Penny report.pdf').replace(/[\\/:*?"<>|]/g, '-'), filters: [{ name: 'PDF', extensions: ['pdf'] }] });
+      const r = await dialog.showSaveDialog(win, { defaultPath: String(name || mt('dlg.reportPdf')).replace(/[\\/:*?"<>|]/g, '-'), filters: [{ name: 'PDF', extensions: ['pdf'] }] });
       if (r.canceled || !r.filePath) return false;
       const pdf = await win.webContents.printToPDF({ printBackground: true, pageSize: 'A4', margins: { top: 0.5, bottom: 0.5, left: 0.45, right: 0.45 } });
       fs.writeFileSync(r.filePath, pdf);
@@ -439,7 +429,7 @@ else {
     const attErr = e => ({ ok: false, error: (e && e.code) || 'failed' });
     ipcMain.handle('att:pick', async () => {
       const r = await dialog.showOpenDialog(win, { properties: ['openFile', 'multiSelections'], filters: [
-        { name: 'Receipts, photos and documents', extensions: Object.keys(ATT_TYPES) }, { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'heic', 'heif'] }, { name: 'PDF', extensions: ['pdf'] }] });
+        { name: mt('dlg.attAll'), extensions: Object.keys(ATT_TYPES) }, { name: mt('dlg.images'), extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'heic', 'heif'] }, { name: 'PDF', extensions: ['pdf'] }] });
       if (r.canceled) return { ok: true, files: [] };
       const files = [], bad = [];
       for (const f of r.filePaths.slice(0, 10)) {

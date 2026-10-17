@@ -126,6 +126,7 @@ function createI18n() {
     get chain() { return chain.slice(); },
     t: (key, vars) => translate(key, vars, false),
     th: (key, vars) => translate(key, vars, true),
+    raw: (code, key) => ((bundles.get(canon(code)) || {}).strings || {})[key],
     exists: key => lookup(key) !== undefined || lookup(key, 1) !== undefined,
     setNumberLocale: tag => { numberTag = tag || FALLBACK; },
     setMissingHandler: fn => { onMissing = fn; },

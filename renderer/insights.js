@@ -93,7 +93,7 @@ function insightList(R=insRange()){
   // worth knowing
   const top=Object.entries(st.byCat).sort((a,b)=>b[1]-a[1])[0];
   if(top&&st.exp>0)add(`top:${R.key}:${R.a}`,'info','coins',tr('in.top.t',{name:cn(top[0])}),tr('in.top.d',{amount:money(top[1]),pct:pct(top[1]/st.exp)}),[{l:tr('in.a.see'),fn:()=>rangeTx(R,{cat:top[0]})}],5);
-  const subs=S.bills.filter(b=>b.type==='expense'&&(b.sub||cat(b.category).name==='Subscriptions'));
+  const subs=S.bills.filter(b=>b.type==='expense'&&(b.sub||isSubsCat(cat(b.category))));
   if(subs.length){const m=sum(subs,monthlyEq);add('subs:total','info','repeat',tr('in.subs.t',{count:subs.length,amount:money(m)}),tr('in.subs.d',{year:money(m*12)}),[{l:tr('in.a.bills'),fn:()=>go('bills')}],4);}
   try{detectSubs().forEach(d=>add(`sub:${d.name}`,'info','search',tr('in.hidden.t',{name:d.name}),tr('in.hidden.d',{amount:money(d.amount)}),[{l:tr('in.a.addBill'),fn:()=>openBill({name:d.name,amount:d.amount,type:'expense',freq:'monthly',next:d.next||today(),category:d.category,accountId:d.accountId||S.accounts[0]&&S.accounts[0].id,auto:false,sub:true},true)},{l:tr('in.a.notSub'),fn:null,dismiss:true}],6));}catch{}
   let we=0,wd=0;for(const x of S.transactions){if(x.type!=='expense'||x.billId||x.date<R.a||x.date>R.b)continue;const g=pd(x.date).getDay();(g===0||g===6?(we+=x.amount):(wd+=x.amount));}

@@ -33,7 +33,7 @@ DW.planning=()=>{
 /* ---------- settings: gross income + exchange rates ---------- */
 function fxRowsHtml(s){
   const cur=[...new Set(S.accounts.map(accCur))].filter(c=>c!==s.currency);
-  const rows=cur.map(c=>srow('coins','var(--teal)',trh('fx.rate',{cur:c,base:s.currency}),(s.fx&&s.fx[c])?'':`<span class="bad">${trh('fx.missingRow')}</span>`,`<input type="number" step="0.0001" min="0" data-fx="${esc(c)}" value="${(s.fx&&s.fx[c])||''}" placeholder="0.0000" dir="ltr" aria-label="${trh('fx.rate',{cur:c,base:s.currency})}">`)).join('');
+  const rows=cur.map(c=>srow('coins','var(--teal)',trh('fx.rate',{cur:c,base:s.currency}),(s.fx&&s.fx[c])?'':`<span class="bad">${trh('fx.missingRow')}</span>`,`<input type="number" step="0.0001" min="0" data-fx="${esc(c)}" value="${(s.fx&&s.fx[c])||''}" placeholder="0.0000" dir="ltr" aria-label="${esc(tr('fx.rate',{cur:c,base:s.currency}))}">`)).join('');
   return srow('briefcase','var(--blue)',trh('set.gross'),trh('set.grossD'),`<input type="number" id="st_gross" min="0" step="1" value="${s.grossIncome||''}" placeholder="${trh('common.optional')}">`)
     +(rows||`<div class="setrow plain"><div class="grow"><small>${trh('fx.none')}</small></div></div>`)
     +(rows?`<div class="setrow plain"><div class="grow"><small>${trh('fx.note')}</small></div></div>`:'');
