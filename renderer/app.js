@@ -50,15 +50,22 @@ function buildShell(){
   updateSideFoot();updatePrivBtn();
 }
 function go(p){if(p==='settings'&&cur!=='settings'&&setPhone())SET_CAT=null;   /* phones open Settings at the category list */
-  cur=p;$$('.nav').forEach(n=>n.classList.toggle('on',n.dataset.nav===p));$('#ttl').textContent=I18N.exists('nav.'+p)?tr('nav.'+p):PAGES[p].title;render();const v=$('#view');v.scrollTop=0;$('#top').classList.remove('scrolled');
-  v.classList.add('fresh');clearTimeout(go._t);go._t=setTimeout(()=>v.classList.remove('fresh'),1100);countUp(v);}
+  const v=$('#view'),same=p===cur;if(!same&&cur)SCROLL_MEM[cur]=v.scrollTop;
+  cur=p;$$('.nav').forEach(n=>{const on=n.dataset.nav===p;n.classList.toggle('on',on);on?n.setAttribute('aria-current','page'):n.removeAttribute('aria-current');});placeNavPill();
+  $('#ttl').textContent=I18N.exists('nav.'+p)?tr('nav.'+p):PAGES[p].title;render();
+  v.scrollTop=same?0:(SCROLL_MEM[p]||0);$('#top').classList.toggle('scrolled',v.scrollTop>46);
+  v.classList.add('fresh');clearTimeout(go._t);go._t=setTimeout(()=>v.classList.remove('fresh'),1100);if(!SCROLL_MEM[p])countUp(v);}
 function countUp(root){
   if((S.settings.motion||'full')!=='full')return;
   $$('.kpi .mid .amt[data-v],.hero .amt[data-v],.big .amt[data-v]',root).forEach(el=>{const to=+el.dataset.v;if(!isFinite(to)||Math.abs(to)<1)return;const t0=performance.now(),D=750;
     const step=t=>{const k=Math.min(1,(t-t0)/D),e=1-Math.pow(1-k,3);el.textContent=money(to*e);if(k<1)requestAnimationFrame(step);else el.textContent=money(to);};requestAnimationFrame(step);});
 }
 function render(){const v=$('#view');v.innerHTML=PAGES[cur].render();$$('.grid > *',v).forEach((el,i)=>el.style.setProperty('--i',Math.min(i,9)));PAGES[cur].after&&PAGES[cur].after(v);updateBadge();}
-function refresh(){const v=$('#view'),st=v.scrollTop;updateSideFoot();render();v.scrollTop=st;}
+/* after a change: update the page in place (motion.js) so nothing flashes; full rebuild only if that fails */
+function refresh(){const v=$('#view'),st=v.scrollTop;updateSideFoot();
+  try{morphView(v,PAGES[cur].render());$$('.grid > *',v).forEach((el,i)=>el.style.setProperty('--i',Math.min(i,9)));PAGES[cur].after&&PAGES[cur].after(v);updateBadge();}
+  catch(e){logErr('in-place refresh failed, rebuilding',e);render();}
+  v.scrollTop=st;}
 window.addEventListener('resize',debounce(()=>{if(S&&['dashboard','accounts','insights'].includes(cur))refresh();},200));
 const togglePriv=()=>{S.settings.privacy=!S.settings.privacy;applySettings();save();if(cur==='settings')refresh();toast(tr(S.settings.privacy?'priv.hidden':'priv.visible'));};
 

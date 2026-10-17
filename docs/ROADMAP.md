@@ -1,5 +1,19 @@
 # Suggested next steps (after 1.9)
 
+## Ideas that make Penny more fun and sticky (new)
+- **Monthly "Wrapped" story:** a swipeable recap at month end — biggest win, top merchant, no-spend streak, savings milestone — exportable as an image.
+- **Challenges:** "No-spend weekend", "Cook at home 5 days", "Coffee under 20 this week", with progress rings and streaks.
+- **Achievements:** first budget kept, 3 months of runway, debt-free day, 100 days of tracking.
+- **Ask Penny, upgraded:** natural questions with charts in the answer ("compare dining this year vs last", "what if rent goes up 10%?").
+- **Bill negotiation & subscription cancel helper:** for each subscription, a checklist and a reminder before the renewal date.
+- **Cash envelope mode:** split income into virtual envelopes on payday, drag money between them.
+- **Calendar heat + paydays:** see paydays, bills and low-balance days on one timeline; drag a bill to plan around it.
+- **Widgets on the Windows desktop / tray flyout:** safe-to-spend today and the next bill, without opening the app.
+- **Receipt photos** attached to transactions (stored encrypted), searchable by text.
+- **Split with friends:** mark a transaction as shared and track who owes whom.
+- **Net-worth timeline with life events:** pin "moved", "new job", "car" to the chart.
+- **Price watch on subscriptions:** a notification the day a recurring charge goes up.
+
 Ordered by impact for a global audience. None of these are built yet.
 
 ## Reach more people

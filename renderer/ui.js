@@ -4,7 +4,7 @@ function openModal(html,mount){
   const m=$('#modal');m.innerHTML=html;m.classList.add('on');m.onmousedown=e=>{if(e.target===m)closeModal()};
   mount&&mount($('#modal > *'));return $('#modal > *');
 }
-function closeModal(){const m=$('#modal');m.classList.remove('on');m.innerHTML='';m.onmousedown=null;}
+function closeModal(){const m=$('#modal');try{modalExit();}catch{}m.classList.remove('on');m.innerHTML='';m.onmousedown=null;}
 function openSheet({title,ok=tr('common.save'),cancel=tr('common.cancel'),body,mount,onOk}){
   const s=openModal(`<div class="sheet"><div class="grab"></div><div class="sh"><button class="tbtn" id="shx">${cancel}</button><b>${esc(title)}</b>${ok?`<button class="tbtn bold" id="shok">${ok}</button>`:'<span></span>'}</div><div class="sb">${body}</div></div>`);
   $('#shx',s).onclick=closeModal;

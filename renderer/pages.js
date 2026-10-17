@@ -206,7 +206,7 @@ async function bulkEdit(op,v){
 PAGES.transactions={title:'Transactions',
  render(){
   const adv=advCount();
-  return`<div class="page wrap">${lt(trh('nav.transactions'),trh('tf.sub'),btn('check',trh('tf.select'),'id="fsel"')+btn('down',trh('tf.export'),'id="ex"')+btn('up',trh('tf.import'),'id="im"')+btn('plus',trh('shell.new'),'data-act="add"','pri'))}
+  return`<div class="page wrap">${lt(trh('nav.transactions'),trh('tf.sub'),btn('check',trh('tf.select'),'id="fsel"')+btn('down',trh('tf.export'),'id="ex"')+btn('up',trh('tf.import'),'id="im"'))}
   <div class="toolbar txbar"><div class="searchfield">${icon('search')}<input id="fq" placeholder="${trh('tf.search')}" value="${esc(F.q)}"></div>
   <div class="seg" id="ft">${['all','expense','income','transfer'].map(k=>`<button data-t="${k}" class="${F.type===k?'on':''}">${trh('tf.type.'+k)}</button>`).join('')}</div>
   <select id="fr" class="pillsel" aria-label="${trh('tf.period')}">${['period','last','3m','year','all','custom'].map(k=>opt(k,tr('tf.range.'+k),F.range===k)).join('')}</select>
@@ -250,8 +250,9 @@ PAGES.transactions={title:'Transactions',
   $('#sel_done',v).onclick=()=>{SEL.on=false;SEL.ids.clear();drawTxList(v);};
   $('#sel_none',v).onclick=()=>{SEL.ids.clear();drawTxList(v);};
   $('#sel_all',v).onclick=()=>{filteredTx().forEach(x=>SEL.ids.add(x.id));drawTxList(v);};
-  $('#txbody',v).addEventListener('click',e=>{const r=e.target.closest('[data-selid]');if(!r)return;e.stopPropagation();toggleSel(r.dataset.selid);drawTxList(v);},true);
-  $('#txbody',v).addEventListener('keydown',e=>{if(e.key!==' '&&e.key!=='Enter')return;const r=e.target.closest('[data-selid]');if(!r)return;e.preventDefault();toggleSel(r.dataset.selid);drawTxList(v);const again=$(`[data-selid="${r.dataset.selid}"]`,v);again&&again.focus();});
+  const tb=$('#txbody',v);if(!tb._selWired){tb._selWired=1;   // the list element survives in-place refreshes: wire once
+  tb.addEventListener('click',e=>{const r=e.target.closest('[data-selid]');if(!r)return;e.stopPropagation();toggleSel(r.dataset.selid);drawTxList(v);},true);
+  tb.addEventListener('keydown',e=>{if(e.key!==' '&&e.key!=='Enter')return;const r=e.target.closest('[data-selid]');if(!r)return;e.preventDefault();toggleSel(r.dataset.selid);drawTxList(v);const again=$(`[data-selid="${r.dataset.selid}"]`,v);again&&again.focus();});}
   $$('[data-bulk]',v).forEach(b=>b.onclick=()=>bulkEdit(b.dataset.bulk,v));
  }};
 
@@ -290,7 +291,7 @@ PAGES.goals={title:'Goals',
    const eta=!g.deadline&&surplus>0?addMonths(today(),Math.ceil((g.target-g.saved)/surplus)):null;
    return`<div class="card glass gcard" data-goal="${g.id}"><div style="display:flex;justify-content:center;margin-bottom:14px">${ring(r,140,14,g.color,`<div class="gem">${gl(g.emoji,30)}</div><b style="font-size:15px">${pct(r)}</b>`)}</div><b style="font-size:18px;font-weight:650">${esc(g.name)}</b><div class="muted amt" style="margin:4px 0 12px">${money(g.saved)} of ${money(g.target)}</div>
    ${g.saved>=g.target?`<span class="pill good">${icon('check',12,2.8)}Reached</span>`:g.deadline?`<div class="muted sm">${left<0?'<span class="bad">Past due</span>':`${left} days left`} · set aside <b class="amt" style="color:var(--text)">${money(need)}</b>/mo</div>`:eta?`<div class="muted sm">At last period's surplus: ~${dshort(eta)}</div>`:'<div class="muted sm">No deadline set</div>'}
-   <div style="margin-top:16px;display:flex;gap:8px;justify-content:center"><button class="btn sm pri" data-fund="${g.id}">Add / withdraw</button><button class="btn sm" data-goal="${g.id}">Edit</button></div></div>`;}).join('')}</div>`:`<div class="group">${emptyBox('🌟','No goals yet','<div>What are you saving for?</div>',btn('plus','Create your first goal','data-act="addgoal"','pri'))}</div>`}</div>`;}};
+   <div style="margin-top:16px;display:flex;gap:8px;justify-content:center"><button class="btn sm pri" data-fund="${g.id}">Add / withdraw</button><button class="btn sm" data-goal="${g.id}">Edit</button></div></div>`;}).join('')}<button class="card add-card" data-act="addgoal">${icon('plus',26,2.2)}<b>${trh('goal.addCard')}</b><small>${trh('goal.addCardD')}</small></button></div>`:`<div class="group">${emptyBox('🌟','No goals yet','<div>What are you saving for?</div>',btn('plus','Create your first goal','data-act="addgoal"','pri'))}</div>`}</div>`;}};
 
 /* ================= RECURRING ================= */
 PAGES.bills={title:'Recurring',
@@ -304,21 +305,7 @@ PAGES.bills={title:'Recurring',
   <div class="sec-h">All recurring</div>${S.bills.length?`<div class="group">${[...S.bills].sort((a,b)=>a.next<b.next?-1:1).map(row).join('')}</div>`:`<div class="group">${emptyBox('🔁','Nothing recurring yet','<div>Add rent, salary, Netflix… Penny will forecast around them.</div>',btn('plus','Add recurring item','data-act="addbill"','pri'))}</div>`}</div>`;}};
 
 /* ================= INSIGHTS ================= */
-PAGES.insights={title:'Insights',
- render(){const h=healthScore(),ins=insights();const cats=S.categories.filter(c=>c.type==='expense'),avg=lastMonthsAvgByCat(3);
-  const simCats=cats.filter(c=>avg[c.id]>0).sort((a,b)=>avg[b.id]-avg[a.id]);
-  return`<div class="page wrap">${lt('Insights','What Penny noticed about your money')}
-  <div class="grid g-main"><div><div class="sec-h" style="margin-top:0">What I noticed</div><div class="group">${ins.map(i=>`<div class="insight ${i.tone||''}"><div class="e">${gl(i.e,20)}</div><div><b>${esc(i.title)}</b><span>${esc(i.text)}</span></div></div>`).join('')}</div></div>
-  <div><div class="sec-h" style="margin-top:0">Financial health</div><div class="card glass"><div style="display:flex;justify-content:center;margin-bottom:16px">${ring(h.total/100,156,15,h.color,`<b style="font-size:42px;letter-spacing:-1.5px">${h.total}</b><div class="faint">${h.label}</div>`)}</div>${h.parts.map(p=>`<div class="mini-part"><div class="t"><span>${p.n}</span><span>${Math.round(p.v)}/${p.max}</span></div><div class="bar" style="height:6px"><i style="width:${p.v/p.max*100}%"></i></div><div class="hint" style="margin-top:4px">${esc(p.d)}</div></div>`).join('')}</div></div></div>
-  <div class="grid g2" style="margin-top:6px"><div><div class="sec-h">What-if simulator</div><div class="card glass">${simCats.length?`<label class="f">If I spent less on</label><select id="sc">${simCats.map(c=>opt(c.id,`${c.name} · avg ${money(avg[c.id])}/mo`)).join('')}</select><label class="f" style="margin-top:18px">by <b id="sp" style="color:var(--text)">20%</b></label><input id="sl" type="range" min="0" max="100" value="20"><div class="grid g3" style="margin-top:22px;text-align:center"><div><div class="faint sm">Per month</div><div class="sim-out good" id="s1"></div></div><div><div class="faint sm">Per year</div><div class="sim-out good" id="s2"></div></div><div><div class="faint sm">Invested 10y @7%</div><div class="sim-out" id="s3" style="color:var(--accent)"></div></div></div>`:emptyBox('🧪','Nothing to simulate yet','<div>Add a few transactions first.</div>')}</div></div>
-  <div><div class="sec-h">Income vs spending</div><div class="card glass"><div class="chart" id="bars"></div><div class="legend h" style="margin-top:10px"><div><i style="background:var(--green)"></i>Income</div><div><i style="background:var(--accent)"></i>Spending</div></div></div></div></div>
-  <div class="grid g2"><div><div class="sec-h">60-day forecast${whyBtn('forecast')}</div><div class="card glass"><div class="chart" id="fc2"></div><div class="hint">${(()=>{const f=forecast(60);return trh('fc.hint',{daily:money(f.daily),low:money(f.minLow.y),conf:tr('why.conf.'+f.confidence)})+(f.excluded.length?' '+trh('fc.excl',{count:f.excluded.length}):'');})()}</div></div></div><div><div class="sec-h">Spending heatmap · ${periodFor(today()).label}</div><div class="card glass">${heatmap()}</div></div></div></div>`;},
- after(v){
-  const groups=[];for(let i=-5;i<=0;i++){const p=periodFor(today(),i),s=stats(p.start,p.end);groups.push({label:FMT.dateFmt({month:'short'}).format(pd(p.start)),inc:s.inc,exp:s.exp});}
-  drawBars($('#bars',v),groups,[{key:'inc',color:'#30D158',label:'Income'},{key:'exp',color:getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#0A7F66',label:'Spending'}],{h:230});
-  const f=forecast(60);drawArea($('#fc2',v),f.pts,{h:210,color:'var(--teal)',markMin:true,min:f.min,zero:true,band:{lo:f.lo,hi:f.hi}});
-  const sc=$('#sc',v);if(sc){const avg=lastMonthsAvgByCat(3);const upd=()=>{const cut=$('#sl',v).value/100,m=avg[sc.value]*cut,r=.07/12,fv=m*((Math.pow(1+r,120)-1)/r);$('#sp',v).textContent=Math.round(cut*100)+'%';$('#s1',v).textContent=money(m);$('#s2',v).textContent=money(m*12);$('#s3',v).textContent=money(fv);};sc.onchange=upd;$('#sl',v).oninput=upd;upd();}
- }};
+/* PAGES.insights: see insights.js */
 
 /* ================= SETTINGS ================= */
 /* Organised into categories (left list on desktop, drill-down list on phones) with a search box that filters

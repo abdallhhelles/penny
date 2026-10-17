@@ -1,7 +1,7 @@
 {
   "name": "penny",
   "productName": "Penny",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "description": "Penny — every cent, in focus. Private personal finance for Windows.",
   "main": "bootstrap.js",
   "author": "Akrot",

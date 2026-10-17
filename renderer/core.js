@@ -354,27 +354,12 @@ function planning(){
     split:Finance.split503020({income:inc,needs,wants}),savingsRate:Finance.savingsRate(inc,exp),emergency:Finance.emergency(T.liquid,ess,6),
     dti:Finance.dti(debtPay,gross),housingRatio:Finance.housing(housing,gross)};
 }
+/* One score everywhere (1.9): the Financial Health Report's four pillars (report.js), 0-100. */
 function healthScore(){
-  const t=today(),p=periodFor(t),prev=periodFor(t,-1);
-  const st=stats(p.start,p.end),pv=stats(prev.start,prev.end);
-  const inc=st.inc||pv.inc,exp=st.inc?st.exp:pv.exp;
-  const rate=inc>0?(inc-exp)/inc:0;
-  const sSave=clamp(rate/0.2,0,1)*30;
-  const budgeted=S.categories.filter(c=>c.type==='expense'&&c.budget>0);
-  let sBud=15;
-  if(budgeted.length){const ok=budgeted.filter(c=>(st.byCat[c.id]||0)<=budgetFor(c).available).length;sBud=ok/budgeted.length*25;}
-  const pl=planning();
-  const months=pl.emergency?pl.emergency.months:0;
-  const sEmg=clamp(months/6,0,1)*25;
-  const T=totals();const ratio=T.assets>0?-T.liabs/T.assets:(T.liabs<0?1:0);
-  const sDebt=clamp(1-ratio/0.5,0,1)*20;
-  const total=Math.round(sSave+sBud+sEmg+sDebt);
-  return{total,parts:[
-    {n:'Savings rate',v:sSave,max:30,d:`${pct(rate)} of income saved`},
-    {n:'Budget discipline',v:sBud,max:25,d:budgeted.length?`${budgeted.filter(c=>(st.byCat[c.id]||0)<=budgetFor(c).available).length}/${budgeted.length} on track`:'Set budgets to score'},
-    {n:'Emergency fund',v:sEmg,max:25,d:`${months.toFixed(1)} months of essentials`},
-    {n:'Debt load',v:sDebt,max:20,d:T.liabs<0?`${pct(ratio)} of assets owed`:'Debt-free'}
-  ],label:total>=80?'Excellent':total>=60?'Good':total>=40?'Fair':'Needs love',color:total>=80?'var(--good)':total>=60?'#7fe3a9':total>=40?'var(--warn)':'var(--bad)'};
+  const P=pillars(reportData()),none=P.total==null,total=none?0:P.total;
+  const part=k=>({n:tr('rp.p.'+k),v:P[k]==null?0:P[k],max:100,d:P[k]==null?tr('rp.lbl.none'):P[k]+' · '+rLabel(P[k])});
+  return{total,none,parts:['spend','save','borrow','plan'].map(part),label:rLabel(P.total),
+    color:none?'var(--fill-2)':total>=80?'var(--good)':total>=60?'#7fe3a9':total>=40?'var(--warn)':'var(--bad)'};
 }
 /* repeating payees found in your history (any rhythm, income too); suggestions only */
 function detectRecurringAll(){
