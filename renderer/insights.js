@@ -214,7 +214,7 @@ PAGES.insights={title:'Insights',
   $$('.mrow[data-cat]',v).forEach(e=>{const go_=()=>rangeTx(R,{cat:e.dataset.cat});e.onclick=go_;e.onkeydown=k=>{if(k.key==='Enter')go_();};});
   // income vs spending, last 6 periods; a click on a month opens its transactions
   const groups=[],ps=[];for(let i=-5;i<=0;i++){const p=periodFor(today(),i),s=stats(p.start,p.end);ps.push(p);groups.push({label:FMT.dateFmt({month:'short'}).format(pd(p.start)),inc:s.inc,exp:s.exp});}
-  drawBars($('#bars',v),groups,[{key:'inc',color:'#30D158',label:tr('in.recap.in')},{key:'exp',color:getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#0A7F66',label:tr('in.recap.out')}],{h:230});
+  drawBars($('#bars',v),groups,[{key:'inc',color:getComputedStyle(document.documentElement).getPropertyValue('--green').trim()||'#2BB89A',label:tr('in.recap.in')},{key:'exp',color:getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#0A7F66',label:tr('in.recap.out')}],{h:230});
   const bh=$('#bhits',v);if(bh){bh.innerHTML=ps.map((p,i)=>`<button data-p="${i}" aria-label="${esc(groups[i].label)}" title="${esc(groups[i].label)}"></button>`).join('');$$('[data-p]',bh).forEach(b=>b.onclick=()=>{const p=ps[+b.dataset.p];showTx({range:'custom',from:p.start,to:p.end});});}
   const f=forecast(60);drawArea($('#fc2',v),f.pts,{h:210,color:'var(--teal)',markMin:true,min:f.min,zero:true,band:{lo:f.lo,hi:f.hi}});
   wireWhatIf(v);

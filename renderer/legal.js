@@ -85,7 +85,7 @@ Contact. ${contact(P).join('; ') || `${P.name}`}
     return `${'Penny'} includes open-source software.
 - Electron (MIT License) - https://www.electronjs.org
 - Chromium and its dependencies (BSD-style and other licenses) - https://www.chromium.org/chromium-os/licensing
-- Inter typeface (SIL Open Font License 1.1) is used only to draw the brand kit; it is not shipped in the app.
+- Sora typeface, Copyright 2019 The Sora Project Authors (https://github.com/sora-xor/sora-font), SIL Open Font License 1.1 (full text in assets/Sora-OFL.txt). Bundled for titles and amounts.
 The full license texts of the bundled runtime are in the application folder (LICENSE and LICENSES.chromium.html).`;
   }
   return { eula, privacy, oss };

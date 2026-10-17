@@ -31,7 +31,7 @@ function planBadge(){return isPro()?(MONETIZATION.enabled?'<span class="pill pro
 
 function openUpgrade(focus){
   openSheet({title:'Penny Pro',ok:null,cancel:'Close',body:`
-   <div style="text-align:center;margin:2px 0 18px"><div class="logo" style="margin:0 auto 12px;width:64px;height:64px;border-radius:20px">${LOGO_SVG(38)}</div>
+   <div style="text-align:center;margin:2px 0 18px"><div class="logo" style="margin:0 auto 12px;width:64px;height:64px;border-radius:20px">${LOGO_SVG(64)}</div>
     <h2 style="font-size:26px;letter-spacing:-.6px;margin:0">Penny Pro</h2><p class="muted" style="margin:6px 0 0">Everything in Penny, with no limits.</p></div>
    <div class="group" style="margin-bottom:14px">${PRO_FEATURES.map(f=>`<div class="li noicon ${f.id===focus?'hl':''}" style="min-height:54px"><div class="sq ico sm" style="--c:${f.color}">${icon(f.icon,16)}</div><div class="grow"><b>${f.n}</b><small>${f.d}</small></div>${icon('check',16,2.6)}</div>`).join('')}</div>
    ${MONETIZATION.purchaseUrl?`<div class="plans">${[['monthly','Monthly'],['yearly','Yearly'],['lifetime','Lifetime']].map(([k,l])=>`<div class="plan ${k==='yearly'?'on':''}" data-plan="${k}"><small>${l}</small><b>${MONETIZATION.price[k]}</b></div>`).join('')}</div><button class="btn pri" id="buy" style="width:100%;height:50px;font-size:16px;margin-top:12px">Get Penny Pro</button>`:`<div class="sec-f" style="text-align:center;margin-top:0">Paid plans aren't available yet.</div>`}

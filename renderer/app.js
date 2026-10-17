@@ -17,30 +17,38 @@ function wireUpdCard(){
 async function applyUpdate(){saveNow();native.updApply();}
 
 function hexRgb(h){const m=h.replace('#','');const n=parseInt(m.length===3?m.split('').map(c=>c+c).join(''):m,16);return[(n>>16)&255,(n>>8)&255,n&255];}
+/* Two themes only (brand guidelines v1.0): Light (Cream/Ink) and Dark (Night/Cream). Colours come from the brand
+   tokens in style.css, so there is nothing to tune here except the theme itself. */
+const sysTheme=()=>matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
 function applySettings(){
   const s=S.settings,r=document.documentElement;
-  const theme=s.theme==='auto'?(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):s.theme;
-  r.dataset.theme=theme;
-  r.style.setProperty('--accent',s.accent);r.style.setProperty('--accent-rgb',hexRgb(s.accent).join(','));
-  r.style.setProperty('--blur',s.blur+'px');
-  r.style.setProperty('--glass-a',theme==='light'?(.2+s.opacity/100*2.4).toFixed(2):(s.opacity/100).toFixed(2));
-  r.style.setProperty('--pad',{compact:'16px',comfortable:'22px',spacious:'30px'}[s.density]);
-  r.style.setProperty('--fs',s.fontSize+'px');r.dataset.bg=s.bg||'aurora';r.dataset.style=s.style==='glass'?'glass':'clean';r.dataset.motion=s.motion||'full';
-  const mat=hasNative&&native.platform==='win32'&&s.material!=='none'&&!s.solid;
-  r.classList.toggle('mat-on',mat);r.classList.toggle('no-anim',!s.anim);r.classList.toggle('solid',!!s.solid);
-  if(hasNative){native.material(s.solid?'none':s.material);native.overlay(theme==='light'?'#000000':'#ffffff');}
+  if(s.theme!=='light'&&s.theme!=='dark')s.theme=sysTheme();   // older "auto" and missing values settle on one of the two
+  const theme=s.theme;
+  r.dataset.theme=theme;r.dataset.style='clean';r.dataset.bg='none';r.dataset.motion=s.motion||'full';
+  r.style.removeProperty('--accent');r.style.removeProperty('--accent-rgb');
+  r.style.setProperty('--pad',{compact:'16px',comfortable:'22px',spacious:'30px'}[s.density]||'22px');
+  r.style.setProperty('--fs',s.fontSize+'px');
+  r.classList.remove('mat-on');r.classList.toggle('no-anim',!s.anim);r.classList.add('solid');
+  if(hasNative){native.material('none');native.overlay(theme==='light'?'#14211F':'#FBF6EF');if(native.theme)native.theme(theme);}
   $('#app')?.classList.toggle('compact',s.compact);
   document.body.classList.toggle('priv',s.privacy);
   updatePrivBtn();
 }
-matchMedia('(prefers-color-scheme: light)').addEventListener?.('change',()=>{if(S&&S.settings.theme==='auto')applySettings();});
+/* switching theme: a short cross-fade of colours instead of a hard flip */
+function setTheme(t){
+  if(t!=='light'&&t!=='dark')return;const r=document.documentElement;
+  if(motionOK()){r.classList.add('theme-anim');clearTimeout(setTheme._t);setTheme._t=setTimeout(()=>r.classList.remove('theme-anim'),420);}
+  S.settings.theme=t;applySettings();save();
+  if(['dashboard','insights','accounts','report'].includes(cur))setTimeout(()=>refresh(),30);   // charts pick up the new palette
+}
+
 
 function updateSideFoot(){const e=$('#sf');if(!e)return;const n=S.settings.name||tr('side.you');e.innerHTML=`${avatarHtml(36)}<div class="txt"><b>${esc(S.settings.nick||n)}</b><small>${S.settings.why?esc(S.settings.why):trh('side.private')}</small></div>`;}
 function updatePrivBtn(){const b=$('#privbtn');if(b)b.innerHTML=icon(S.settings.privacy?'eyeoff':'eye',20);}
 function updateBadge(){const n=$('[data-nav=bills] .badge');const c=S?dueSoon(3).filter(x=>x.overdue||x.d<=today()).length:0;if(n){n.textContent=c;n.style.display=c?'':'none';}syncNative(c);}
 const syncNative=debounce(c=>{if(!hasNative||!S)return;try{const sp=safeToSpend(),left=sp.perDay-sp.spentToday;native.tooltip(S.settings.privacy?tr('tray.tooltipHidden'):tr('tray.tooltipSafe',{amount:money(Math.max(0,left))}));native.badge(c);}catch{}},600);
 function buildShell(){
-  $('#side').innerHTML=`<div class="brand"><div class="logo">${LOGO_SVG(23)}</div><div><b>Penny</b><small>${trh('shell.tagline')}</small></div></div>${NAV.map(([k,i,l,c],n)=>`<div class="nav" data-nav="${k}" role="button" tabindex="0" title="${trh(l)}${n<9?' (Alt+'+(n+1)+')':n===NAV.length-1?' (Alt+0)':''}"><span class="sq" style="--c:${c}">${icon(i,17,2)}</span><span>${trh(l)}</span>${k==='bills'?'<span class="badge" style="display:none"></span>':''}${k==='plan'&&MONETIZATION.enabled&&!isPro()?'<span class="protag">PRO</span>':''}</div>`).join('')}<div class="spacer"></div><div class="side-foot" id="sf" data-go="settings"></div>`;
+  $('#side').innerHTML=`<div class="brand"><div class="logo">${LOGO_SVG(27)}</div><div><b class="wordmark" aria-label="Penny">penny</b><small>${trh('shell.tagline')}</small></div></div>${NAV.map(([k,i,l,c],n)=>`<div class="nav" data-nav="${k}" role="button" tabindex="0" title="${trh(l)}${n<9?' (Alt+'+(n+1)+')':n===NAV.length-1?' (Alt+0)':''}"><span class="sq" style="--c:${c}">${icon(i,17,2)}</span><span>${trh(l)}</span>${k==='bills'?'<span class="badge" style="display:none"></span>':''}${k==='plan'&&MONETIZATION.enabled&&!isPro()?'<span class="protag">PRO</span>':''}</div>`).join('')}<div class="spacer"></div><div class="side-foot" id="sf" data-go="settings"></div>`;
   $('#top').innerHTML=`<div class="inline-title" id="ttl"></div><div class="search" id="srch" role="button" tabindex="0">${icon('search',16)}<span>${trh('shell.search')}</span><kbd>Ctrl K</kbd></div><button class="icon-btn" id="privbtn" title="${trh('shell.privacyTitle')}" aria-label="${trh('shell.privacyAria')}"></button><button class="upd-pill" id="updbtn" style="display:none"></button><button class="btn pri" data-act="add">${icon('plus',17,2.4)}${trh('shell.new')}</button>`;
   $('#side').onclick=e=>{const n=e.target.closest('[data-nav]');if(n)go(n.dataset.nav);else if(e.target.closest('[data-go]'))go('settings');};
   $('#side').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){const n=e.target.closest('[data-nav]');if(n){e.preventDefault();go(n.dataset.nav);}}};
@@ -156,7 +164,7 @@ const REGION_CUR={US:'USD',GB:'GBP',EG:'EGP',DE:'EUR',FR:'EUR',ES:'EUR',IT:'EUR'
 function onboarding(){
   const reg=(navigator.language.split('-')[1]||'US').toUpperCase();const guess=REGION_CUR[reg]||'USD';
   const lg=LOCALES.find(l=>l[0]===navigator.language)?navigator.language:'en-US';
-  openModal(`<div class="sheet" data-noclose><div class="grab"></div><div class="sb" style="padding:26px 28px 30px"><div style="text-align:center"><div class="logo" style="margin:6px auto 16px;width:72px;height:72px;border-radius:22px">${LOGO_SVG(42)}</div><h2 style="font-size:30px;letter-spacing:-.7px">${trh('onb.title')}</h2><p class="muted" style="margin:6px 0 26px;font-size:16px">${trh('onb.sub')}</p></div>
+  openModal(`<div class="sheet" data-noclose><div class="grab"></div><div class="sb" style="padding:26px 28px 30px"><div style="text-align:center"><div class="logo" style="margin:6px auto 16px;width:72px;height:72px;border-radius:22px">${LOGO_SVG(76)}</div><h2 style="font-size:30px;letter-spacing:-.7px">${trh('onb.title')}</h2><p class="muted" style="margin:6px 0 26px;font-size:16px">${trh('onb.sub')}</p></div>
     <div class="fg"><div class="fr"><label>${trh('onb.language')}</label><select id="wl">${langOptions(readLangPref())}</select></div><div class="fr"><label>${trh('onb.name')}</label><input id="wn" placeholder="${trh('common.optional')}"></div><div class="fr"><label>${trh('onb.currency')}</label><select id="wc">${CURRENCIES.map(c=>opt(c,c,c===guess)).join('')}</select></div></div>
     <div style="display:grid;gap:10px;margin-top:22px"><button class="btn pri" id="wf" style="height:50px;font-size:17px">${trh('onb.start')}</button><button class="btn" id="wd" style="height:46px">${trh('onb.demo')}</button></div></div></div>`,s=>{
     $('#modal').onmousedown=null;

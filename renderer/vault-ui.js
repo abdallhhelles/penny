@@ -14,7 +14,7 @@ const vaultOn=()=>hasNative&&VAULT.mode==='passcode';
    each try is counted by the main process and slowed down after five misses) */
 function lockPad({title,sub,onSubmit,extra='',onExtra}){
   const L=$('#lock');L.classList.add('on');let pin='',busy=false;
-  L.innerHTML=`<div class="lockbox" role="dialog" aria-modal="true" aria-labelledby="lk_t"><div class="logo lock-logo">${LOGO_SVG(32)}</div><h2 id="lk_t">${esc(title)}</h2><p id="lk_s">${esc(sub)}</p>
+  L.innerHTML=`<div class="lockbox" role="dialog" aria-modal="true" aria-labelledby="lk_t"><div class="logo lock-logo">${LOGO_SVG(64)}</div><h2 id="lk_t">${esc(title)}</h2><p id="lk_s">${esc(sub)}</p>
     <div class="pin-dots" id="pd" aria-live="polite"></div>
     <div class="keypad">${[1,2,3,4,5,6,7,8,9,'⌫',0,'go'].map(k=>k==='go'?`<button class="go" data-k="go" aria-label="${trh('lock.unlock')}">${icon('chevron',26)}</button>`:`<button class="${k==='⌫'?'ghost':''}" data-k="${k}" aria-label="${k==='⌫'?trh('lock.delete'):k}">${k}</button>`).join('')}</div>
     <div class="lock-extra">${extra}</div></div>`;
@@ -45,7 +45,7 @@ function vaultUnlockScreen(info){
     const done=(r,how)=>{VAULT=r.vault||VAULT;resolve({data:r.data,how});};
     const recoveryForm=()=>{
       const L=$('#lock');L.classList.add('on');
-      L.innerHTML=`<div class="lockbox wide" role="dialog" aria-modal="true"><div class="logo lock-logo">${LOGO_SVG(32)}</div><h2>${trh('lock.recoveryTitle')}</h2><p>${trh('lock.recoverySub')}</p>
+      L.innerHTML=`<div class="lockbox wide" role="dialog" aria-modal="true"><div class="logo lock-logo">${LOGO_SVG(64)}</div><h2>${trh('lock.recoveryTitle')}</h2><p>${trh('lock.recoverySub')}</p>
         <input id="rk" class="rk-in" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX" aria-label="${trh('lock.recoveryTitle')}">
         <p id="rk_m" class="lock-msg" aria-live="polite"></p>
         <div class="lock-actions"><button class="btn pri" id="rk_go">${trh('lock.unlock')}</button>${info.passcode&&!deviceGone?`<button class="btn ghost-l" id="rk_back">${trh('lock.usePasscode')}</button>`:''}</div>
@@ -73,7 +73,7 @@ function vaultUnlockScreen(info){
     if(deviceGone){
       if(info.recovery)recoveryForm();
       else{const L=$('#lock');L.classList.add('on');
-        L.innerHTML=`<div class="lockbox wide" role="dialog" aria-modal="true"><div class="logo lock-logo">${LOGO_SVG(32)}</div><h2>${trh('lock.foreignTitle')}</h2><p>${trh('lock.foreignBody')}</p><div class="lock-actions">${aside()}</div></div>`;
+        L.innerHTML=`<div class="lockbox wide" role="dialog" aria-modal="true"><div class="logo lock-logo">${LOGO_SVG(64)}</div><h2>${trh('lock.foreignTitle')}</h2><p>${trh('lock.foreignBody')}</p><div class="lock-actions">${aside()}</div></div>`;
         hookAside(L);}
     }else padForm();
   });

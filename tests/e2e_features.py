@@ -131,7 +131,7 @@ def main():
         pg.fill('#set_q', 'zzzz'); pg.wait_for_timeout(250)
         check('S4 no-match message', pg.is_visible('#set_none'))
         pg.fill('#set_q', ''); pg.wait_for_timeout(200)
-        check('S5 all settings controls still bound (ids present)', pg.evaluate("['st_theme','st_lang','st_cur','sy_launch','d_exp','d_wipe','bk_now','st_al','pin_on'].every(i=>document.getElementById(i))"))
+        check('S5 all settings controls still bound (ids present)', pg.evaluate("document.querySelectorAll('[data-th]').length===2") and pg.evaluate("['st_lang','st_cur','sy_launch','d_exp','d_wipe','bk_now','st_al','pin_on'].every(i=>document.getElementById(i))"))
         shot(pg, 'settings-desktop')
 
         # ---------- language: Arabic ----------

@@ -65,7 +65,7 @@ function ring(p,size=110,stroke=11,color='var(--accent)',inner=''){
 function activityRings(rings,size=170){
   const sw=size*0.1,gap=size*0.028;let s='';
   rings.forEach((r,i)=>{const rad=size/2-sw/2-i*(sw+gap),C=2*Math.PI*rad;
-    s+=`<circle cx="${size/2}" cy="${size/2}" r="${rad}" fill="none" stroke="${r.color}" stroke-opacity=".22" stroke-width="${sw}"/><circle cx="${size/2}" cy="${size/2}" r="${rad}" fill="none" stroke="${r.color}" stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${Math.max(.01,C*clamp(r.p,0,1))} ${C}" transform="rotate(-90 ${size/2} ${size/2})" style="transition:stroke-dasharray 1.2s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 0 6px ${r.color}55)"/>`;});
+    s+=`<circle cx="${size/2}" cy="${size/2}" r="${rad}" fill="none" style="stroke:${r.color}" stroke-opacity=".22" stroke-width="${sw}"/><circle cx="${size/2}" cy="${size/2}" r="${rad}" fill="none" stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${Math.max(.01,C*clamp(r.p,0,1))} ${C}" transform="rotate(-90 ${size/2} ${size/2})" style="stroke:${r.color};transition:stroke-dasharray 1.2s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 0 6px color-mix(in srgb,${r.color} 33%,transparent))"/>`;});
   return`<svg width="${size}" height="${size}">${s}</svg>`;
 }
 function heatmap(){

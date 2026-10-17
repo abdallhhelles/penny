@@ -1,9 +1,10 @@
-"""Builds the Penny brand kit (publisher: Akrot) from ONE mark definition.
-To swap the logo: edit MARK_PATHS below (a 120x120 grid, strokes only, round caps) and run
+"""Builds the Penny brand kit (publisher: Akrot) from ONE mark definition: the copper coin with an evergreen slice
+lifted out (Penny brand guidelines v1.0). Run:
     python3 brand/build_brand.py
-It regenerates: assets/icon.png (512) / icon.ico / tray-*.png, installer bitmaps, brand/*.svg|png and
-renderer/logo-mark.js (the inline mark the app draws, using currentColor so it follows light/dark)."""
-import os, sys, io
+It regenerates: assets/icon.png (512) / icon.ico (16-256, flat <=32 px, detailed >=40 px) / tray-*.png,
+installer bitmaps, brand/*.svg|png and renderer/logo-mark.js (the inline mark the app draws).
+Needs: Pillow, fontTools, Playwright's Chromium, and the Sora font (brand/fonts/Sora-SemiBold.woff)."""
+import os, io
 from fontTools.ttLib import TTFont
 from fontTools.pens.svgPathPen import SVGPathPen
 from fontTools.pens.transformPen import TransformPen
@@ -11,77 +12,123 @@ from playwright.sync_api import sync_playwright
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
-FONT = '/usr/share/fonts/opentype/inter/InterDisplay-Bold.otf'
-ACCENT = '#0A7F66'; INK = '#0B1210'
+FONT = os.path.join(HERE, 'fonts', 'Sora-SemiBold.woff')
 
-# ---- the mark (2026 rebrand): a "P" whose bowl is a coin - one stem, one round bowl, one solid dot (the penny).
-# Restraint plus one defining choice. Strokes only, round caps, no gradients -> holds at 16 px and in one colour.
-MARK_PATHS = '''<path d="M42 96 V28" stroke-width="12"/>
-<path d="M42 28 H62 A25 25 0 0 1 62 78 H42" stroke-width="12" stroke-linejoin="round"/>
-<path d="M62 53 h.01" stroke-width="15"/>'''
+# ---- palette (brand guidelines, "The palette") ----
+C = dict(copper300='#EE9A5C', copper500='#C9632F', copper700='#9E4520', green300='#2BB89A', green500='#12846F',
+         green700='#0F7563', ink='#14211F', night='#10201D', slate='#5B6664', mist='#A9B8B4', sand='#E8DFD3', cream='#FBF6EF')
 
-def mark_inner(color):  # strokes only -> survives 16 px and one-colour printing
-    return f'<g fill="none" stroke="{color}" stroke-linecap="round">{MARK_PATHS}</g>'
+# ---- the mark on a 100-unit grid (brand guidelines, "Construction") ----
+COIN = 'M50 50 L88.04 37.64 A40 40 0 1 1 50 10 Z'          # r=40 circle with a 72 degree wedge removed
+SLICE = 'M53.53 45.15 L53.53 5.15 A40 40 0 0 1 91.57 32.79 Z'  # the wedge, pushed 6 units outward along -54 degrees
+RIM = 'M79.48 40.42 A31 31 0 1 1 50 19'                       # r=31 highlight, detailed mark only
 
-def tile_svg(size=1024, bg=ACCENT, fg='#FFFFFF'):
-    return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="{size}" height="{size}"><rect width="120" height="120" rx="27" fill="{bg}"/><g transform="translate(60 60) scale(.74) translate(-60 -62)">{mark_inner(fg)}</g></svg>'
+def flat(coin, slc):
+    return f'<path d="{COIN}" fill="{coin}"/><path d="{SLICE}" fill="{slc}"/>'
 
-def mono_svg(color, size=512):
-    return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="{size}" height="{size}">{mark_inner(color)}</svg>'
+def detailed():
+    return ('<defs><linearGradient id="cu" x1="0.2" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#EE9A5C"/>'
+            '<stop offset="0.55" stop-color="#C9632F"/><stop offset="1" stop-color="#9E4520"/></linearGradient>'
+            '<linearGradient id="sl" x1="0.2" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#2BB89A"/><stop offset="1" stop-color="#0F7563"/></linearGradient>'
+            '<filter id="sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0.6" dy="1.2" stdDeviation="1.1" flood-color="#10201D" flood-opacity="0.28"/></filter></defs>'
+            f'<path d="{COIN}" fill="url(#cu)"/><path d="{RIM}" fill="none" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="2" stroke-linecap="round"/>'
+            f'<path d="{SLICE}" fill="url(#sl)" filter="url(#sh)"/>')
 
-def tray_svg(color, size):  # tray glyph: a little bolder so it holds at 16 px
-    return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="4 4 112 112" width="{size}" height="{size}"><g fill="none" stroke="{color}" stroke-linecap="round"><path d="M42 98 V26" stroke-width="15"/><path d="M42 26 H62 A27 27 0 0 1 62 80 H42" stroke-width="15" stroke-linejoin="round"/><path d="M62 53 h.01" stroke-width="17"/></g></svg>'
+def mark_svg(inner, size=512):
+    return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="{size}" height="{size}">{inner}</svg>'
 
-def text_path(text, size, tracking=-0.012):
+def text_path(text, size, tracking=-0.045):
     f = TTFont(FONT); gs = f.getGlyphSet(); cmap = f.getBestCmap(); upm = f['head'].unitsPerEm
     sc = size / upm; x = 0; parts = []
     for ch in text:
         g = cmap[ord(ch)]; pen = SVGPathPen(gs)
         gs[g].draw(TransformPen(pen, (sc, 0, 0, -sc, x, 0)))
         parts.append(pen.getCommands()); x += gs[g].width * sc + tracking * size
-    return ' '.join(parts), x
+    return ' '.join(parts), x - tracking * size
 
-def wordmark_svg(color):
-    d, w = text_path('Penny', 64); d2, w2 = text_path('by Akrot', 20, 0.02)
-    tile = tile_svg(72).replace('<svg ', '<svg x="0" y="0" ', 1)
-    tw = 72 + 22 + max(w, w2)
-    return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {tw:.0f} 72" width="{tw*2:.0f}" height="144">{tile}<g transform="translate(94,42)"><path d="{d}" fill="{color}"/></g><g transform="translate(96,64)"><path d="{d2}" fill="{color}" fill-opacity=".62"/></g></svg>'
+def lockup_svg(on_dark, stacked=False):
+    """Horizontal: mark height = 1.15 x wordmark size, gap = 1/4 mark. Stacked: mark = 1.75 x, gap = 1/8 mark.
+    The wordmark is outlined (no live text), Sora SemiBold, lowercase, letter-spacing -0.045em."""
+    coin, slc = (C['copper300'], C['green300']) if on_dark else (C['copper500'], C['green500'])
+    ink = C['cream'] if on_dark else C['ink']; ws = 100
+    d, w = text_path('penny', ws)
+    asc = ws * 0.73  # x-height-ish optical centre for lowercase
+    if not stacked:
+        m = ws * 1.15; gap = m / 4; W = m + gap + w; H = m
+        return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W:.1f} {H:.1f}" width="{W*2:.0f}" height="{H*2:.0f}">'
+                f'<g transform="scale({m/100:.4f})">{flat(coin, slc)}</g>'
+                f'<g transform="translate({m+gap:.1f},{H/2+asc/2-ws*0.05:.1f})"><path d="{d}" fill="{ink}"/></g></svg>')
+    m = ws * 1.75; gap = m / 8; W = max(m, w); H = m + gap + ws * 0.95
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W:.1f} {H:.1f}" width="{W*2:.0f}" height="{H*2:.0f}">'
+            f'<g transform="translate({(W-m)/2:.1f},0) scale({m/100:.4f})">{flat(coin, slc)}</g>'
+            f'<g transform="translate({(W-w)/2:.1f},{m+gap+asc:.1f})"><path d="{d}" fill="{ink}"/></g></svg>')
 
 def write(path, s, mode='w'):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, mode, **({} if 'b' in mode else {'encoding': 'utf8'})) as f: f.write(s)
 
+LOGO_JS = """'use strict';
+/* GENERATED by brand/build_brand.py from the Penny brand guidelines v1.0 - edit the mark there, not here.
+   LOGO_MARK(size): the coin with the lifted slice. Under 48 px the flat two-path mark in theme colours
+   (--mark-coin / --mark-slice: the 500s on light, the 300s on dark); 48 px and up the detailed mark (gradients, rim,
+   soft shadow). LOGO_MARK(size,'mono') draws it in currentColor, LOGO_MARK(size,'white') in white. No tile, ever. */
+const LOGO_COIN=%r,LOGO_SLICE=%r,LOGO_RIM=%r;
+let _logoN=0;
+function LOGO_MARK(s=22,mode){
+  const open=`<svg class="pmark" viewBox="0 0 100 100" width="${s}" height="${s}" aria-hidden="true">`;
+  if(mode==='mono'||mode==='white'){const c=mode==='white'?'#FFFFFF':'currentColor';return`${open}<path d="${LOGO_COIN}" fill="${c}"/><path d="${LOGO_SLICE}" fill="${c}"/></svg>`;}
+  if(s<48)return`${open}<path d="${LOGO_COIN}" style="fill:var(--mark-coin,#C9632F)"/><path d="${LOGO_SLICE}" style="fill:var(--mark-slice,#12846F)"/></svg>`;
+  const n=++_logoN;
+  return`${open}<defs><linearGradient id="pmc${n}" x1="0.2" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#EE9A5C"/><stop offset="0.55" stop-color="#C9632F"/><stop offset="1" stop-color="#9E4520"/></linearGradient><linearGradient id="pms${n}" x1="0.2" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#2BB89A"/><stop offset="1" stop-color="#0F7563"/></linearGradient><filter id="pmf${n}" x="-20%%" y="-20%%" width="140%%" height="140%%"><feDropShadow dx="0.6" dy="1.2" stdDeviation="1.1" flood-color="#10201D" flood-opacity="0.28"/></filter></defs><path d="${LOGO_COIN}" fill="url(#pmc${n})"/><path d="${LOGO_RIM}" fill="none" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="2" stroke-linecap="round"/><path d="${LOGO_SLICE}" fill="url(#pms${n})" filter="url(#pmf${n})"/></svg>`;
+}
+"""
+
 def main():
-    svgs = {'penny-icon.svg': tile_svg(), 'penny-mark-white.svg': mono_svg('#FFFFFF'), 'penny-mark-black.svg': mono_svg(INK),
-            'penny-wordmark-on-light.svg': wordmark_svg(INK), 'penny-wordmark-on-dark.svg': wordmark_svg('#FFFFFF')}
-    for n, c in svgs.items(): write(os.path.join(HERE, n), c)
-    # the app draws the mark inline with currentColor, so it follows the theme
-    write(os.path.join(ROOT, 'renderer', 'logo-mark.js'),
-          "'use strict';\n/* GENERATED by brand/build_brand.py - edit MARK_PATHS there, not here. */\nconst LOGO_PATHS=" + repr(MARK_PATHS.replace('\n', '')) + ";\n")
-    def render(svg_text, png, w, h, transparent=True):
+    svgs = {'penny-icon.svg': mark_svg(detailed()),
+            'penny-mark-flat.svg': mark_svg(flat(C['copper500'], C['green500'])),
+            'penny-mark-flat-dark.svg': mark_svg(flat(C['copper300'], C['green300'])),
+            'penny-mark-white.svg': mark_svg(flat('#FFFFFF', '#FFFFFF')),
+            'penny-mark-black.svg': mark_svg(flat(C['ink'], C['ink'])),
+            'penny-wordmark-on-light.svg': lockup_svg(False), 'penny-wordmark-on-dark.svg': lockup_svg(True),
+            'penny-stacked-on-light.svg': lockup_svg(False, True), 'penny-stacked-on-dark.svg': lockup_svg(True, True)}
+    for n, s in svgs.items(): write(os.path.join(HERE, n), s)
+    for old in ('penny-mark-black-512.png',):
+        try: os.remove(os.path.join(HERE, old))
+        except FileNotFoundError: pass
+    write(os.path.join(ROOT, 'renderer', 'logo-mark.js'), LOGO_JS % (COIN, SLICE, RIM))
+
+    def render(svg_text, png, w, h):
         pg.set_viewport_size({'width': w, 'height': h})
-        pg.set_content(f'<body style="margin:0;background:transparent">{svg_text.replace("width=", "data-w=", 1).replace("<svg ", f"<svg width=\"{w}\" height=\"{h}\" ", 1)}</body>')
-        pg.wait_for_timeout(120); pg.screenshot(path=png, omit_background=transparent)
+        s = svg_text.replace('width=', 'data-w=', 1).replace('height=', 'data-h=', 1).replace('<svg ', f'<svg width="{w}" height="{h}" ', 1)
+        pg.set_content(f'<body style="margin:0;background:transparent">{s}</body>')
+        pg.wait_for_timeout(80); pg.screenshot(path=png, omit_background=True)
+    tmp = os.path.join(HERE, '_ico'); os.makedirs(tmp, exist_ok=True)
     with sync_playwright() as p:
         b = p.chromium.launch(executable_path='/opt/pw-browsers/chromium'); pg = b.new_page()
-        render(tile_svg(), os.path.join(HERE, 'penny-icon-1024.png'), 1024, 1024)
-        render(tile_svg(), os.path.join(ROOT, 'assets', 'icon.png'), 512, 512)          # store / window icon
-        for name, col in (('tray-light', INK), ('tray-dark', '#FFFFFF')):               # dark glyph for a light taskbar, white for a dark one
+        render(mark_svg(detailed()), os.path.join(HERE, 'penny-icon-1024.png'), 1024, 1024)
+        render(mark_svg(detailed()), os.path.join(ROOT, 'assets', 'icon.png'), 512, 512)
+        render(mark_svg(flat('#FFFFFF', '#FFFFFF')), os.path.join(HERE, 'penny-mark-white-512.png'), 512, 512)
+        render(mark_svg(flat(C['ink'], C['ink'])), os.path.join(HERE, 'penny-mark-ink-512.png'), 512, 512)
+        # icon.ico: every size rendered from the vector master (never downscaled from 256); flat at 32 px and under
+        for sz in (16, 20, 24, 32, 40, 48, 64, 256):
+            render(mark_svg(flat(C['copper500'], C['green500']) if sz <= 32 else detailed()), os.path.join(tmp, f'{sz}.png'), sz, sz)
+        # tray: flat mark; the 500s on a light taskbar, the 300s on a dark one
+        for name, (coin, slc) in (('tray-light', (C['copper500'], C['green500'])), ('tray-dark', (C['copper300'], C['green300']))):
             for sz, suf in ((16, ''), (32, '@2x')):
-                render(tray_svg(col, sz), os.path.join(ROOT, 'assets', f'{name}{suf}.png'), sz, sz)
-        render(mono_svg(INK), os.path.join(HERE, 'penny-mark-black-512.png'), 512, 512)
-        render(mono_svg('#FFFFFF'), os.path.join(HERE, 'penny-mark-white-512.png'), 512, 512)
-        # small-size proof sheet: 16/24/32/48 px, light and dark
-        render('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"></svg>', os.path.join(HERE, '_t.png'), 10, 10)
+                render(mark_svg(flat(coin, slc)), os.path.join(ROOT, 'assets', f'{name}{suf}.png'), sz, sz)
+        # installer art: Night ground with the stacked lockup (sidebar), white header with the flat mark
+        render(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 164 314" width="164" height="314"><rect width="164" height="314" fill="{C["night"]}"/></svg>', os.path.join(tmp, 'sb_bg.png'), 164, 314)
+        render(lockup_svg(True, True), os.path.join(tmp, 'sb_lock.png'), 120, 140)
+        render(mark_svg(flat(C['copper500'], C['green500'])), os.path.join(tmp, 'hd_mark.png'), 40, 40)
         b.close()
-    os.remove(os.path.join(HERE, '_t.png'))
-    big = Image.open(os.path.join(HERE, 'penny-icon-1024.png')).convert('RGBA')
-    big.save(os.path.join(ROOT, 'assets', 'icon.ico'), sizes=[(256, 256), (128, 128), (64, 64), (48, 48), (32, 32), (24, 24), (16, 16)])
-    # installer bitmaps (NSIS): sidebar 164x314, header 150x57
-    icon = Image.open(os.path.join(ROOT, 'assets', 'icon.png')).convert('RGBA')
-    sb = Image.new('RGB', (164, 314), ACCENT); sb.paste(icon.resize((96, 96), Image.LANCZOS), (34, 40), icon.resize((96, 96), Image.LANCZOS))
-    sb.save(os.path.join(ROOT, 'installer', 'nsis', 'sidebar.bmp'))
-    hd = Image.new('RGB', (150, 57), (255, 255, 255)); hd.paste(icon.resize((40, 40), Image.LANCZOS), (100, 8), icon.resize((40, 40), Image.LANCZOS))
-    hd.save(os.path.join(ROOT, 'installer', 'nsis', 'header.bmp'))
+    imgs = [Image.open(os.path.join(tmp, f'{s}.png')).convert('RGBA') for s in (256, 64, 48, 40, 32, 24, 20, 16)]
+    imgs[0].save(os.path.join(ROOT, 'assets', 'icon.ico'), sizes=[(i.width, i.height) for i in imgs], append_images=imgs[1:])
+    sb = Image.open(os.path.join(tmp, 'sb_bg.png')).convert('RGB'); lk = Image.open(os.path.join(tmp, 'sb_lock.png')).convert('RGBA')
+    sb.paste(lk, (22, 56), lk); sb.save(os.path.join(ROOT, 'installer', 'nsis', 'sidebar.bmp'))
+    hd = Image.new('RGB', (150, 57), (255, 255, 255)); hm = Image.open(os.path.join(tmp, 'hd_mark.png')).convert('RGBA')
+    hd.paste(hm, (100, 8), hm); hd.save(os.path.join(ROOT, 'installer', 'nsis', 'header.bmp'))
+    for f in os.listdir(tmp): os.remove(os.path.join(tmp, f))
+    os.rmdir(tmp)
     print('brand ok')
+
 main()

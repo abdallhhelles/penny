@@ -96,9 +96,8 @@ const icon=(n,s=20,sw=1.9)=>`<svg class="ic${DIR_ICONS.has(n)?' flip':''}" viewB
 
 
 /* ---------- Penny brand ---------- */
-const BRAND={name:'Penny',tag:'Every cent, in focus.',version:'1.9.1',publisher:(typeof PUBLISHER!=='undefined'?PUBLISHER.name:'Akrot')};
+const BRAND={name:'Penny',tag:'Every cent, in focus.',version:'1.10.0',publisher:(typeof PUBLISHER!=='undefined'?PUBLISHER.name:'Akrot')};
 /* The mark is defined once in brand/build_brand.py (-> logo-mark.js). Strokes only, so it works at 16 px and in one colour. */
-const LOGO_MARK=(s=22,c='#fff')=>`<svg viewBox="0 0 120 120" width="${s}" height="${s}" fill="none" stroke="${c}" stroke-linecap="round" aria-hidden="true">${LOGO_PATHS}</svg>`;
 const LOGO_SVG=LOGO_MARK;
 
 /* Emoji -> mono icon. Categories, goals, reminders etc. store an emoji character (kept for data compatibility, backups and imports);

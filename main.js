@@ -77,7 +77,7 @@ function migrateLegacy() {
 }
 
 /* ---------- Windows integration settings (kept in the main process so they work before the UI loads) ---------- */
-const SYS_DEFAULTS = { lang: 'auto', launchAtStartup: false, startMinimized: true, closeToTray: false, tray: true, hotkey: true, hotkeyAccel: 'CommandOrControl+Alt+P', alwaysOnTop: false, hideFromCapture: false, zoom: 1, autoUpdate: true, updateFeed: '' };
+const SYS_DEFAULTS = { lang: 'auto', launchAtStartup: false, startMinimized: true, closeToTray: false, tray: true, hotkey: true, hotkeyAccel: 'CommandOrControl+Alt+P', alwaysOnTop: false, hideFromCapture: false, zoom: 1, autoUpdate: true, updateFeed: '', uiTheme: '' };
 let sys = { ...SYS_DEFAULTS };
 function loadSys() {
   try { sys = { ...SYS_DEFAULTS, ...JSON.parse(fs.readFileSync(sysFile(), 'utf8')) }; }
@@ -233,16 +233,18 @@ function loadState() {
     return ok ? s : { width: s.width, height: s.height };
   } catch { return {}; }
 }
+/* the app's own theme (Light or Dark, chosen in Settings), remembered so the window opens in the right colour */
+const uiDark = () => sys.uiTheme ? sys.uiTheme === 'dark' : nativeTheme.shouldUseDarkColors;
+const themeBg = () => (uiDark() ? '#10201D' : '#FBF6EF');
 function createWindow() {
   const isWin = process.platform === 'win32';
   const st = loadState();
   win = new BrowserWindow({
     width: st.width || 1380, height: st.height || 880, x: st.x, y: st.y, minWidth: 420, minHeight: 560,
-    show: false, frame: false, backgroundColor: '#00000000',
-    ...(isWin ? { backgroundMaterial: 'acrylic' } : {}),
+    show: false, frame: false, backgroundColor: themeBg(),   // brand Night / Cream: no white flash before the first paint
     titleBarStyle: 'hidden',
-    titleBarOverlay: { color: '#00000000', symbolColor: '#ffffff', height: 52 },
-    icon: path.join(__dirname, 'assets', 'icon.png'),
+    titleBarOverlay: { color: '#00000000', symbolColor: uiDark() ? '#FBF6EF' : '#14211F', height: 52 },
+    icon: path.join(__dirname, 'assets', isWin ? 'icon.ico' : 'icon.png'),
     title: 'Penny',
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, devTools: !app.isPackaged, spellcheck: false, autoplayPolicy: 'no-user-gesture-required' }
   });
@@ -333,6 +335,13 @@ else {
     ipcMain.handle('log:write', (_e, level, msg) => { if (logBudget-- > 0) (level === 'error' ? log.error : log.warn)('renderer: ' + String(msg).slice(0, 1500)); return true; });
     ipcMain.handle('app:openLogs', () => shell.openPath(path.dirname(log.file)));
     ipcMain.handle('win:material', (_e, m) => { if (win && process.platform === 'win32') { try { win.setBackgroundMaterial(m); } catch {} } return true; });
+    ipcMain.on('win:themeGet', e => { e.returnValue = uiDark() ? 'dark' : 'light'; });
+    ipcMain.handle('win:theme', (_e, t) => {
+      if (t !== 'light' && t !== 'dark') return false;
+      if (sys.uiTheme !== t) { sys.uiTheme = t; saveSys(); }
+      if (win) { try { win.setBackgroundColor(themeBg()); } catch {} }
+      return true;
+    });
     ipcMain.handle('win:overlay', (_e, symbolColor) => { if (win && process.platform === 'win32') { try { win.setTitleBarOverlay({ color: '#00000000', symbolColor, height: 52 }); } catch {} } });
     ipcMain.handle('file:export', async (_e, { name, content, filters }) => {
       const r = await dialog.showSaveDialog(win, { defaultPath: name, filters });

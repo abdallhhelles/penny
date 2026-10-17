@@ -29,7 +29,7 @@ const TIPS=[
  {e:'🔁',t:'Subscriptions in disguise',d:'Penny spots monthly charges you never set up. Look for “hidden subscriptions” in Insights.',go:'insights',cta:'See insights'},
  {e:'📅',t:'See the month at a glance',d:'The Calendar shows spending heat, bills and reminders. Tap any day for details.',go:'calendar',cta:'Open Calendar'},
  {e:'🛟',t:'How long could you last?',d:'Insights shows your runway: how many months your cash would cover. Aim for 3 to 6.',go:'insights',cta:'See insights'},
- {e:'🎨',t:'Make it yours',d:'Pick an accent colour, a background and an avatar in Settings. Penny can also match Windows light/dark.',go:'settings',cta:'Personalise'},
+ {e:'🎨',t:'Make it yours',d:'Choose light or dark, an avatar and how Penny greets you in Settings.',go:'settings',cta:'Personalise'},
  {e:'💾',t:'Your data is yours',d:'Export everything to one file in Settings → Your data, and import it into any newer Penny.',go:'settings',cta:'Open settings'},
  {e:'↩️',t:'Oops? Undo it',d:'Deleted something by accident? Tap Undo in the toast that appears at the top.'}
 ];
@@ -51,13 +51,13 @@ const IL={
  safe:()=>`<div class="il il-safe"><div class="shield">${icon('lock',34,2)}</div><div class="il-tags"><span>${gl('🔒',14)}Passcode</span><span>${gl('👁️',14)}Hide amounts</span><span>${gl('🪟',14)}Hide from screen capture</span><span>${gl('💾',14)}Encrypted export</span></div></div>`
 };
 const GUIDE=[
- {k:'welcome',c:['#0A7F66','#1FB894'],t:'Welcome to Penny',d:'A calm, private home for your money. Everything stays on this PC — no account, no cloud. Here’s a 60-second tour.'},
+ {k:'welcome',c:['#10201D','#1F3A34'],t:'Welcome to Penny',d:'A calm, private home for your money. Everything stays on this PC — no account, no cloud. Here’s a 60-second tour.'},
  {k:'add',c:['#0A7F66','#5E5CE6'],t:'Add things in one line',d:'Press N (or the + New button) and just type how you’d say it. Penny picks the amount, place, category and date for you.'},
  {k:'ask',c:['#5E5CE6','#BF5AF2'],t:'Ask Penny anything',d:'Press Ctrl K to search, jump to a page, or ask a question like “how much did I spend on dining last month?”.'},
  {k:'budget',c:['#FF9F0A','#FF453A'],t:'Know what’s safe to spend',d:'Set budgets (Penny can suggest them) and see how much you can spend today after bills — with rings that fill as you go.'},
  {k:'remind',c:['#FF453A','#FF375F'],t:'Reminders that actually ping you',d:'Rent, bills, appointments, medicine. Pick a time and a sound — Penny sends a Windows notification even when it’s in the tray.'},
  {k:'cal',c:['#32ADE6','#0A7F66'],t:'See the whole month',d:'The Calendar shows heat for spending days plus bills and reminders. Tap a day to see or add things.'},
- {k:'style',c:['#BF5AF2','#FF375F'],t:'Make it yours',d:'Choose your colours, background, avatar and how Penny greets you. Settings has dozens of ways to tune it.'},
+ {k:'style',c:['#BF5AF2','#FF375F'],t:'Make it yours',d:'Light or dark, your avatar, your nickname and how Penny greets you. Make it feel like yours.'},
  {k:'safe',c:['#30D158','#0A7F66'],t:'Private and in your control',d:'Lock with a passcode, hide amounts with P, launch at startup, quick-add with a hotkey, and export your data any time.'}
 ];
 let gi=0;

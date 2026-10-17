@@ -21,9 +21,9 @@ function moneyRings(){
   const bud=S.categories.filter(c=>c.type==='expense'&&c.budget>0);const tb=sum(bud,c=>budgetFor(c).available),ts=sum(bud,c=>st.byCat[c.id]||0);
   const gp=S.goals.length?sum(S.goals,g=>clamp(g.saved/g.target,0,1))/S.goals.length:0;
   return[
-   {p:st.inc>0?clamp(st.rate/0.2,0,1):0,color:'#30D158',name:'Saved',val:st.inc>0?`${pct(st.rate)} of income`:'No income yet',sub:'Goal: 20%'},
-   {p:tb>0?clamp(1-ts/tb,0,1):0,color:'#0A7F66',name:'Budget left',val:tb>0?`${money(Math.max(0,tb-ts))} left`:'No budgets set',sub:tb>0?`of ${money(tb)}`:'Set one in Budgets'},
-   {p:gp,color:'#FF375F',name:'Goals',val:S.goals.length?`${pct(gp)} on average`:'No goals yet',sub:S.goals.length?`${S.goals.length} active`:'Create your first'}
+   {p:st.inc>0?clamp(st.rate/0.2,0,1):0,color:'var(--green)',name:'Saved',val:st.inc>0?`${pct(st.rate)} of income`:'No income yet',sub:'Goal: 20%'},
+   {p:tb>0?clamp(1-ts/tb,0,1):0,color:'var(--accent)',name:'Budget left',val:tb>0?`${money(Math.max(0,tb-ts))} left`:'No budgets set',sub:tb>0?`of ${money(tb)}`:'Set one in Budgets'},
+   {p:gp,color:'var(--yellow)',name:'Goals',val:S.goals.length?`${pct(gp)} on average`:'No goals yet',sub:S.goals.length?`${S.goals.length} active`:'Create your first'}
   ];
 }
 function startSteps(){
@@ -332,20 +332,11 @@ PAGES.settings={title:'Settings',
   </div>`)+setGroup('',`<div class="group pro-card" id="procard"><div class="setrow plain" style="padding:16px"><div class="sq ico" style="--c:#D98A4E">${icon('star',18)}</div><div class="grow"><b style="font-size:16px">Penny Pro ${planBadge()}</b><small>${isPro()?(MONETIZATION.enabled?(LIC.name?H('set.proLicensed',{name:LIC.name}):H('set.proThanks')):H('set.proEarly')):H('set.proPitch')}</small></div><button class="btn sm ${isPro()&&MONETIZATION.enabled?'':'pri'}" id="pro_btn">${H(isPro()&&MONETIZATION.enabled?'set.manage':'set.seePro')}</button></div></div>`);
 
   const look=setGroup(H('set.appearance'),`<div class="group">
-   ${srow('palette','var(--indigo)',H('set.theme'),H('set.themeD'),`<select id="st_theme">${tOpts('set.theme',['dark','light','auto'],k=>s.theme===k)}</select>`)}
-   ${srow('sparkles','var(--blue)',H('set.accent'),H('set.accentD'),`<div class="swatches">${ACCENTS.map(c=>`<div class="sw ${c.toLowerCase()===s.accent.toLowerCase()?'on':''}" data-ac="${c}" style="background:${c}"></div>`).join('')}<input type="color" id="st_ac" value="${s.accent}" title="${H('set.customColour')}"></div>`)}
-   ${srow('layers','var(--teal)',H('set.style'),H('set.styleD'),`<select id="st_style">${tOpts('set.style',['clean','glass'],k=>(s.style||'clean')===k)}</select>`)}
-   <div class="glassonly">
-   ${srow('eye','var(--teal)',H('set.blur'),H('set.blurD',{px:s.blur}),`<input type="range" id="st_blur" min="0" max="60" value="${s.blur}">`)}
-   ${srow('eye','var(--mint)',H('set.tint'),H('set.tintD'),`<input type="range" id="st_op" min="1" max="30" value="${s.opacity}">`)}
-   ${srow('card','var(--purple)',H('set.material'),H('set.materialD'),`<select id="st_mat">${tOpts('set.material',['acrylic','mica','tabbed','none'],k=>s.material===k)}</select>`)}
-   ${srow('shield','var(--green)',H('set.solid'),H('set.solidD'),toggle('st_solid',s.solid))}
-   </div>
+   <div class="setrow plain theme-row"><div class="sq ico sm" style="--c:var(--accent)">${icon('palette',16)}</div><div class="grow"><b>${H('set.theme')}</b><small>${H('set.themeD2')}</small></div>
+    <div class="theme-pick" role="radiogroup" aria-label="${H('set.theme')}">${['light','dark'].map(k=>`<button role="radio" aria-checked="${(s.theme==='light'?'light':'dark')===k}" class="tp ${(s.theme==='light'?'light':'dark')===k?'on':''}" data-th="${k}"><span class="tp-prev ${k}"><i></i><i></i><i></i></span><span>${H('set.theme.'+k)}</span></button>`).join('')}</div></div>
    ${srow('list','var(--orange)',H('set.compact'),H('set.compactD'),toggle('st_cmp',s.compact))}
    ${srow('sliders','var(--pink)',H('set.density'),H('set.densityD'),`<select id="st_den">${tOpts('set.density',['compact','comfortable','spacious'],k=>s.density===k)}</select>`)}
    ${srow('info','var(--blue)',H('set.textSize'),H('set.textSizeD',{px:s.fontSize}),`<input type="range" id="st_fs" min="13" max="19" value="${s.fontSize}">`)}
-   ${srow('image','var(--pink)',H('set.background'),H('set.backgroundD'),`<select id="st_bg">${BACKGROUNDS.map(([k,l,p])=>opt(k,l+(p&&!can('backgrounds')?'  ·  Pro':''),s.bg===k)).join('')}</select>`)}
-   ${srow('bolt','var(--yellow)',H('set.anim'),H('set.animD'),toggle('st_anim',s.anim))}
    ${srow('sparkles','var(--orange)',H('set.motion'),H('set.motionD'),`<select id="st_motion">${tOpts('set.motion',['full','reduced','off'],k=>s.motion===k)}</select>`)}
   </div>`)+setGroup(H('set.layout'),`<div class="group">
    ${s.widgets.map((w,i)=>`<div class="setrow plain"><div class="grow"><b>${I18N.exists('widget.'+w.id)?H('widget.'+w.id):esc(WIDGETS.find(x=>x[0]===w.id)[1])}</b></div><button class="icon-btn" data-wm="${i}" data-d="-1" aria-label="${H('set.moveUp')}" ${i?'':'disabled style="opacity:.25"'}>${icon('arrowup',17)}</button><button class="icon-btn" data-wm="${i}" data-d="1" aria-label="${H('set.moveDown')}" ${i<s.widgets.length-1?'':'disabled style="opacity:.25"'}>${icon('arrowdown',17)}</button>${toggle('wv'+i,w.on).replace('<input','<input data-wv="'+i+'"')}</div>`).join('')}
@@ -461,19 +452,10 @@ PAGES.settings={title:'Settings',
   }
   q.oninput=filter;$('#set_qx',v).onclick=()=>{q.value='';filter();q.focus();};
   q.onkeydown=e=>{if(e.key==='Escape'&&q.value){q.value='';filter();e.stopPropagation();}};
-  $('#st_theme',v).onchange=e=>set('theme',e.target.value);
-  $('.swatches',v).onclick=e=>{if(e.target.dataset.ac){set('accent',e.target.dataset.ac);$$('.sw',v).forEach(x=>x.classList.toggle('on',x===e.target));$('#st_ac',v).value=e.target.dataset.ac;}};
-  $('#st_ac',v).oninput=e=>{set('accent',e.target.value);$$('.sw',v).forEach(x=>x.classList.remove('on'));};
-  $('#st_style',v).onchange=e=>set('style',e.target.value);
   bindFxRows(v,set);
-  $('#st_blur',v).oninput=e=>{set('blur',+e.target.value);e.target.closest('.setrow').querySelector('small').textContent=tr('set.blurD',{px:+e.target.value});};
-  $('#st_op',v).oninput=e=>set('opacity',+e.target.value);
-  $('#st_mat',v).onchange=e=>set('material',e.target.value);
-  $('#st_solid',v).onchange=e=>set('solid',e.target.checked);
   $('#st_cmp',v).onchange=e=>set('compact',e.target.checked);
   $('#st_den',v).onchange=e=>set('density',e.target.value);
   $('#st_fs',v).oninput=e=>{set('fontSize',+e.target.value);e.target.closest('.setrow').querySelector('small').textContent=tr('set.textSizeD',{px:+e.target.value});};
-  $('#st_anim',v).onchange=e=>set('anim',e.target.checked);
   $('#st_name',v).oninput=e=>{S_.name=e.target.value;save();updateSideFoot();};
   $('#st_nick',v).oninput=e=>{S_.nick=e.target.value;save();updateSideFoot();};$('#st_why',v).oninput=e=>{S_.why=e.target.value;save();updateSideFoot();};$('#st_greet',v).onchange=e=>set('greet',e.target.value);
   $('#avs',v).onclick=e=>{const a=e.target.dataset.av;if(!a)return;S_.avatar=a;S_.photo='';changed();};
@@ -503,8 +485,8 @@ PAGES.settings={title:'Settings',
   const po=$('#pin_on',v);if(po)po.onclick=openPinSetup;const pf=$('#pin_off',v);if(pf)pf.onclick=removePasscode;const pc=$('#pin_chg',v);if(pc)pc.onclick=openPinSetup;const rk=$('#rec_new',v);if(rk)rk.onclick=newRecoveryKey;
   $('#d_exp',v).onclick=openExportSheet;$('#d_imp',v).onclick=startImport;
   $('#pro_btn',v).onclick=()=>openUpgrade();
-  $('#st_bg',v).onchange=e=>{const b=BACKGROUNDS.find(x=>x[0]===e.target.value);if(b&&b[2]&&!can('backgrounds')){e.target.value=S_.bg;openUpgrade('backgrounds');return;}set('bg',e.target.value);};
   $('#st_motion',v).onchange=e=>set('motion',e.target.value);
+  $$('[data-th]',v).forEach(b=>b.onclick=()=>{setTheme(b.dataset.th);$$('[data-th]',v).forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-checked',on);});});
   $('#st_rd',v).onchange=e=>set('remindDays',+e.target.value);$('#st_rh',v).onchange=e=>set('remindHour',+e.target.value);$('#st_wd',v).onchange=e=>set('weeklyDigest',e.target.checked);
   $('#st_al',v).onchange=e=>{set('autoLock',+e.target.value);armIdle();};$('#st_lm',v).onchange=e=>set('lockOnMinimize',e.target.checked);$('#st_bl',v).onchange=e=>set('blurOnLeave',e.target.checked);
   if(hasNative){

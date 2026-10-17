@@ -5,7 +5,7 @@ contextBridge.exposeInMainWorld('native', {
   log: (l, m) => ipcRenderer.invoke('log:write', l, m), openLogs: () => inv('app:openLogs'),
   i18nList: () => inv('i18n:list'), i18nGet: c => inv('i18n:get', c),
   listBackups: () => inv('backups:list'), readBackup: n => inv('backups:read', n),
-  material: m => inv('win:material', m), overlay: c => inv('win:overlay', c),
+  material: m => inv('win:material', m), theme: t => inv('win:theme', t), overlay: c => inv('win:overlay', c),
   exportFile: o => inv('file:export', o), savePdf: n => inv('file:pdf', n), importFile: o => inv('file:import', o),
   openDataFolder: () => inv('app:openData'), version: () => inv('app:version'), notify: o => inv('app:notify', o),
   platform: process.platform,
@@ -17,3 +17,6 @@ contextBridge.exposeInMainWorld('native', {
   vaultSetPasscode: p => inv('vault:setPasscode', p), vaultClearPasscode: () => inv('vault:clearPasscode'), vaultNewRecovery: () => inv('vault:newRecovery'), vaultSetAside: () => inv('vault:setAside'),
   licenseGet: () => inv('license:get'), licenseActivate: k => inv('license:activate', k), licenseRemove: () => inv('license:remove')
 });
+
+/* paint the first frame in the app's own theme (no dark flash for light-theme users) */
+try { const t = ipcRenderer.sendSync('win:themeGet'); window.addEventListener('DOMContentLoaded', () => { const r = document.documentElement; if (!r.dataset.themeSet) { r.dataset.theme = t; r.dataset.style = 'clean'; } }); } catch {}

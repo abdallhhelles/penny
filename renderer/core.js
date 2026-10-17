@@ -33,7 +33,7 @@ const DEFAULT_CATS=[
 const WIDGETS=[['networth','Net worth hero'],['tip','Tip of the day'],['kpis','Key numbers'],['safe','Safe to spend'],['health','Health score'],['planning','Money health'],['reminders','Reminders'],['digest','This week'],['cashflow','Cash-flow forecast'],['categories','Spending breakdown'],['pace','Daily budget pace'],['budgets','Budgets'],['goals','Goals'],['upcoming','Upcoming bills'],['recent','Recent activity'],['insights','Smart insights'],['heatmap','Spending heatmap']];
 const BACKGROUNDS=[['aurora','Aurora',0],['penny','Penny copper',0],['sunset','Sunset',1],['ocean','Ocean',1],['forest','Forest',1],['graphite','Graphite',1],['mono','Mono',1]];
 const WIDE=['networth','kpis','cashflow'];
-const DEFAULT_SETTINGS={style:'clean',name:'',currency:'USD',locale:'en-US',digits:'latn',theme:'dark',accent:'#0A7F66',brand2:true,report:{real:.04,swr:.039},blur:30,opacity:9,material:'acrylic',compact:false,density:'comfortable',anim:true,solid:false,notify:true,startDismissed:false,lastNotified:'',fontSize:15,cycleStart:1,privacy:false,pin:null,salt:null,bg:'aurora',motion:'full',autoLock:0,blurOnLeave:false,lockOnMinimize:false,remindHour:9,remindDays:3,weeklyDigest:true,remSound:'chime',remLead:0,quietOn:false,quietFrom:'22:00',quietTo:'07:00',nick:'',avatar:'🙂',photo:'',why:'',greet:'friendly',tipsSeen:false,tipsOff:false,tipIdx:0,tourDone:false,uiSounds:false,lastDigest:'',roundUp:false,sounds:false,widgets:WIDGETS.map(w=>({id:w[0],on:true}))};
+const DEFAULT_SETTINGS={style:'clean',name:'',currency:'USD',locale:'en-US',digits:'latn',theme:(typeof matchMedia==='function'&&matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark',accent:'#C9632F',brand2:true,report:{real:.04,swr:.039},blur:30,opacity:9,material:'acrylic',compact:false,density:'comfortable',anim:true,solid:false,notify:true,startDismissed:false,lastNotified:'',fontSize:15,cycleStart:1,privacy:false,pin:null,salt:null,bg:'aurora',motion:'full',autoLock:0,blurOnLeave:false,lockOnMinimize:false,remindHour:9,remindDays:3,weeklyDigest:true,remSound:'chime',remLead:0,quietOn:false,quietFrom:'22:00',quietTo:'07:00',nick:'',avatar:'🙂',photo:'',why:'',greet:'friendly',tipsSeen:false,tipsOff:false,tipIdx:0,tourDone:false,uiSounds:false,lastDigest:'',roundUp:false,sounds:false,widgets:WIDGETS.map(w=>({id:w[0],on:true}))};
 
 let SYS={launchAtStartup:false,startMinimized:true,closeToTray:false,tray:true,hotkey:true,hotkeyAccel:'CommandOrControl+Alt+P',alwaysOnTop:false,hideFromCapture:false,zoom:1,hotkeyOk:true,packaged:false,lang:'auto',systemLocale:'en-US'};
 /* ---------- state ---------- */
@@ -63,6 +63,7 @@ function normalize(d){
   d.settings={...DEFAULT_SETTINGS,...(d.settings||{})};
   const st=d.settings;
   if(st.accent==='#7c8cff')st.accent=DEFAULT_SETTINGS.accent;
+  st.style='clean';st.bg='none';st.solid=true;st.material='none';   // 1.10 brand: one look, two themes
   if(!st.brand2){st.brand2=true;if(st.accent==='#0A84FF')st.accent=DEFAULT_SETTINGS.accent} // 1.7.1 rebrand: move users still on the old default blue to Penny green; custom choices are kept
   const known=new Set((st.widgets||[]).map(w=>w.id));
   st.widgets=(st.widgets||[]).filter(w=>WIDGETS.some(x=>x[0]===w.id));
@@ -359,7 +360,7 @@ function healthScore(){
   const P=pillars(reportData()),none=P.total==null,total=none?0:P.total;
   const part=k=>({n:tr('rp.p.'+k),v:P[k]==null?0:P[k],max:100,d:P[k]==null?tr('rp.lbl.none'):P[k]+' · '+rLabel(P[k])});
   return{total,none,parts:['spend','save','borrow','plan'].map(part),label:rLabel(P.total),
-    color:none?'var(--fill-2)':total>=80?'var(--good)':total>=60?'#7fe3a9':total>=40?'var(--warn)':'var(--bad)'};
+    color:none?'var(--fill-2)':total>=60?'var(--good)':total>=40?'var(--warn)':'var(--bad)'};
 }
 /* repeating payees found in your history (any rhythm, income too); suggestions only */
 function detectRecurringAll(){

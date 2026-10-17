@@ -43,7 +43,7 @@ function tourDraw(){
   if(st.page&&cur!==st.page)go(st.page);
   const el=st.sel?$(st.sel):null,r=el&&el.getClientRects().length?el.getBoundingClientRect():null;
   const n=TOUR.length-2,num=t.i,last=t.i===TOUR.length-1,first=t.i===0,name=callName();
-  const head=first?`<div class="tour-hero">${LOGO_SVG(40)}</div>`:last?`<div class="tour-hero done">${icon('check',34,2.6)}</div>`:`<div class="tour-ic">${icon(st.ic,18,2.2)}</div>`;
+  const head=first?`<div class="tour-hero">${LOGO_SVG(84)}</div>`:last?`<div class="tour-hero done">${icon('check',34,2.6)}</div>`:`<div class="tour-ic">${icon(st.ic,18,2.2)}</div>`;
   const title=first?tr('tour.welcome.t',{name:name?', '+name:''}):tr('tour.'+st.k+'.t');
   const body=tr('tour.'+st.k+(st.k==='security'&&!VAULT.encrypted?'.d2':'.d'));
   const kbd=st.kbd?`<kbd class="tour-kbd">${trh('tour.'+st.k+'.k')}</kbd>`:'';
