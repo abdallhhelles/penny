@@ -151,17 +151,30 @@ Section "Install" SecInstall
 
   ; ---- 5. shortcuts + uninstaller + Add/Remove Programs ----
   shortcuts:
+  ; brand the runtime: Penny's icon and name on Penny.exe, so Task Manager, Explorer and the taskbar say Penny, not Electron.
+  ; rcedit (MIT, github.com/electron/rcedit) runs from the temp folder and is not installed. Runs on every install/upgrade.
+  DetailPrint "Applying the Penny icon..."
+  InitPluginsDir
+  File "/oname=$PLUGINSDIR\rcedit.exe" "__RCEDIT__"
+  nsExec::ExecToLog '"$PLUGINSDIR\rcedit.exe" "$INSTDIR\${EXE}" --set-icon "$INSTDIR\icon.ico" --set-version-string "FileDescription" "${APP_NAME}" --set-version-string "ProductName" "${APP_NAME}" --set-version-string "CompanyName" "${PUBLISHER}" --set-version-string "InternalName" "${APP_NAME}" --set-version-string "OriginalFilename" "${EXE}" --set-version-string "LegalCopyright" "${PUBLISHER}" --set-file-version "${APP_VERSION4}" --set-product-version "${APP_VERSION4}"'
+  Pop $0
+  ${If} $0 != "0"
+    DetailPrint "Could not stamp the icon onto ${EXE} ($0). Shortcuts still show the Penny icon."
+  ${EndIf}
+  ; a fresh name for the shortcut icon, so Windows cannot show a cached old one after an upgrade
+  Delete "$INSTDIR\penny-*.ico"
+  CopyFiles /SILENT "$INSTDIR\icon.ico" "$INSTDIR\penny-v${APP_VERSION}.ico"
   DetailPrint "Creating shortcuts..."
   SetShellVarContext current
-  CreateShortcut "$SMPROGRAMS\${APP_NAME}.lnk" "$INSTDIR\${EXE}" "" "$INSTDIR\icon.ico" 0
-  CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\${EXE}" "" "$INSTDIR\icon.ico" 0
+  CreateShortcut "$SMPROGRAMS\${APP_NAME}.lnk" "$INSTDIR\${EXE}" "" "$INSTDIR\penny-v${APP_VERSION}.ico" 0
+  CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\${EXE}" "" "$INSTDIR\penny-v${APP_VERSION}.ico" 0
 
   WriteUninstaller "$INSTDIR\Uninstall.exe"
   WriteRegStr HKCU "${UNINST_KEY}" "DisplayName" "${APP_NAME}"
   WriteRegStr HKCU "${UNINST_KEY}" "DisplayVersion" "${APP_VERSION}"
   WriteRegStr HKCU "${UNINST_KEY}" "Publisher" "${PUBLISHER}"
   WriteRegStr HKCU "${UNINST_KEY}" "InstallLocation" "$INSTDIR"
-  WriteRegStr HKCU "${UNINST_KEY}" "DisplayIcon" "$INSTDIR\icon.ico"
+  WriteRegStr HKCU "${UNINST_KEY}" "DisplayIcon" "$INSTDIR\penny-v${APP_VERSION}.ico"
   WriteRegStr HKCU "${UNINST_KEY}" "UninstallString" '"$INSTDIR\Uninstall.exe"'
   WriteRegStr HKCU "${UNINST_KEY}" "QuietUninstallString" '"$INSTDIR\Uninstall.exe" /S'
   __SUPPORT_REG__
@@ -169,6 +182,10 @@ Section "Install" SecInstall
   WriteRegDWORD HKCU "${UNINST_KEY}" "NoRepair" 1
   ${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
   WriteRegDWORD HKCU "${UNINST_KEY}" "EstimatedSize" $0
+  ; refresh Explorer's icon cache (Windows 10/11) and let Penny re-point pinned shortcuts on its next start
+  nsExec::Exec '"$SYSDIR\ie4uinit.exe" -show'
+  Pop $0
+  Delete "$APPDATA\Penny\icon-sync.json"
   DetailPrint "Done."
 SectionEnd
 
@@ -196,6 +213,7 @@ Section "Uninstall"
   Delete "$INSTDIR\*.txt"
   Delete "$INSTDIR\${EXE}"
   Delete "$INSTDIR\icon.ico"
+  Delete "$INSTDIR\penny-*.ico"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir "$INSTDIR"
 SectionEnd

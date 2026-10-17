@@ -156,8 +156,8 @@ function applySys() {
   if (isWin) {
     try {
       app.setUserTasks([
-        { program: process.execPath, arguments: '--quick=expense', iconPath: process.execPath, iconIndex: 0, title: mt('jump.addExpense'), description: mt('jump.addExpenseDesc') },
-        { program: process.execPath, arguments: '--quick=income', iconPath: process.execPath, iconIndex: 0, title: mt('jump.addIncome'), description: mt('jump.addIncomeDesc') }
+        { program: process.execPath, arguments: '--quick=expense', iconPath: brandIconPath() || process.execPath, iconIndex: 0, title: mt('jump.addExpense'), description: mt('jump.addExpenseDesc') },
+        { program: process.execPath, arguments: '--quick=income', iconPath: brandIconPath() || process.execPath, iconIndex: 0, title: mt('jump.addIncome'), description: mt('jump.addIncomeDesc') }
       ]);
     } catch {}
   }
@@ -240,6 +240,74 @@ function loadState() {
 /* the app's own theme (Light or Dark, chosen in Settings), remembered so the window opens in the right colour */
 const uiDark = () => sys.uiTheme ? sys.uiTheme === 'dark' : nativeTheme.shouldUseDarkColors;
 const themeBg = () => (uiDark() ? '#10201D' : '#FBF6EF');
+
+/* =========================================================================
+   Windows icons after an update (1.10). An in-app update replaces the app files but not Penny.exe or the shortcuts,
+   so on the first start of a new version Penny points everything Windows shows at the new icon:
+   Start menu, desktop and pinned-taskbar shortcuts, the jump list, the taskbar button and the Apps list entry.
+   The icon file gets a new name whenever it changes (penny-<hash>.ico), so Windows cannot keep a cached old image.
+   Runs once per icon, only for an installed Penny (Uninstall.exe next to Penny.exe), never touches anything else.
+   ========================================================================= */
+let brandIco = null;   // the stable, versioned icon file in the install folder (null until synced / not installed)
+function brandIconPath() {
+  if (brandIco && fs.existsSync(brandIco)) return brandIco;
+  try {
+    const inst = path.dirname(process.execPath), f = fs.readdirSync(inst).find(n => /^penny-[a-f0-9]{10}\.ico$/.test(n));
+    if (f) return (brandIco = path.join(inst, f));
+  } catch {}
+  return null;
+}
+function syncWindowsIcons(force) {
+  if (process.platform !== 'win32') return;
+  const inst = path.dirname(process.execPath);
+  if (!fs.existsSync(path.join(inst, 'Uninstall.exe'))) return;   // dev run or portable copy: leave Windows alone
+  try {
+    const src = fs.readFileSync(path.join(__dirname, 'assets', 'icon.ico'));
+    const hash = require('crypto').createHash('sha256').update(src).digest('hex').slice(0, 10);
+    const stateF = path.join(dataDir(), 'icon-sync.json');
+    let st = {}; try { st = JSON.parse(fs.readFileSync(stateF, 'utf8')); } catch {}
+    const ico = path.join(inst, `penny-${hash}.ico`);
+    if (!force && st.hash === hash && st.exe === process.execPath && fs.existsSync(ico)) { brandIco = ico; return; }
+    // 1. the icon files: versioned copy for shortcuts, plus the installer's icon.ico (uninstaller, older references)
+    if (!fs.existsSync(ico)) fs.writeFileSync(ico, src);
+    try { fs.writeFileSync(path.join(inst, 'icon.ico'), src); } catch {}
+    for (const n of fs.readdirSync(inst)) if (/^penny-[a-f0-9]{10}\.ico$/.test(n) && n !== path.basename(ico)) { try { fs.unlinkSync(path.join(inst, n)); } catch {} }
+    brandIco = ico;
+    // 2. every shortcut that starts this Penny.exe
+    const ad = app.getPath('appData'), places = [
+      path.join(ad, 'Microsoft', 'Windows', 'Start Menu', 'Programs'),
+      app.getPath('desktop'),
+      path.join(ad, 'Microsoft', 'Internet Explorer', 'Quick Launch', 'User Pinned', 'TaskBar'),
+      path.join(ad, 'Microsoft', 'Internet Explorer', 'Quick Launch', 'User Pinned', 'StartMenu'),
+      path.join(ad, 'Microsoft', 'Internet Explorer', 'Quick Launch')
+    ];
+    const same = (a, b) => path.resolve(String(a || '')).toLowerCase() === path.resolve(b).toLowerCase();
+    let n = 0;
+    for (const dir of places) {
+      let names = []; try { names = fs.readdirSync(dir); } catch { continue; }
+      for (const f of names) {
+        if (!/\.lnk$/i.test(f)) continue;
+        const p = path.join(dir, f);
+        try {
+          const l = shell.readShortcutLink(p);
+          if (!same(l.target, process.execPath)) continue;
+          if (shell.writeShortcutLink(p, 'update', { icon: ico, iconIndex: 0, appUserModelId: APP_ID })) n++;
+        } catch {}
+      }
+    }
+    // 3. Apps list (Settings > Apps): icon and version
+    const { execFile } = require('child_process');
+    const key = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Penny';
+    const reg = (v, d) => new Promise(r => execFile('reg.exe', ['add', key, '/v', v, '/t', 'REG_SZ', '/d', d, '/f'], { windowsHide: true }, () => r()));
+    execFile('reg.exe', ['query', key, '/v', 'InstallLocation'], { windowsHide: true }, async (err, out) => {
+      if (!err && same(String(out).split(/REG_SZ/i)[1]?.trim(), inst)) { await reg('DisplayIcon', ico); await reg('DisplayVersion', updater.VERSION); }
+      // 4. ask Explorer to drop its cached icons (built into Windows 10 and 11)
+      try { execFile(path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'ie4uinit.exe'), ['-show'], { windowsHide: true }, () => {}); } catch {}
+    });
+    fs.writeFileSync(stateF, JSON.stringify({ hash, exe: process.execPath, version: updater.VERSION, shortcuts: n, at: new Date().toISOString() }));
+    log.info(`windows icons updated (${n} shortcut(s))`);
+  } catch (e) { log.warn('windows icon sync failed', e && e.message); }
+}
 function createWindow() {
   const isWin = process.platform === 'win32';
   const st = loadState();
@@ -253,6 +321,7 @@ function createWindow() {
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, devTools: !app.isPackaged, spellcheck: false, autoplayPolicy: 'no-user-gesture-required' }
   });
   if (st.max) win.maximize();
+  if (isWin) { try { const ic = brandIconPath(); if (ic) win.setAppDetails({ appId: APP_ID, appIconPath: ic, appIconIndex: 0, relaunchCommand: `"${process.execPath}"`, relaunchDisplayName: 'Penny' }); } catch {} }
   win.setMenuBarVisibility(false);
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.once('ready-to-show', () => {
@@ -466,7 +535,7 @@ else {
       return r.ok ? { ok: true, payload: r.payload } : { ok: false, reason: r.reason };
     });
     ipcMain.handle('license:remove', () => { try { fs.unlinkSync(licFile()); } catch {} return true; });
-    createWindow(); applySys(); handleArgv(process.argv);
+    syncWindowsIcons(); createWindow(); applySys(); handleArgv(process.argv);
     app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
   });
   // A window that really closes (close-to-tray is off, or Quit was chosen) must end the process.

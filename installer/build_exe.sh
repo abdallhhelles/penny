@@ -25,12 +25,15 @@ cd "$ROOT"
 cp bootstrap.js main.js preload.js store.js log.js license.js updater.js license-public.pem update-public.pem update-config.json "$WORK/app/"
 cp -r renderer "$WORK/app/" && cp assets/icon.png assets/icon.ico assets/tray-*.png "$WORK/app/assets/"
 cp installer/nsis/sidebar.bmp installer/nsis/header.bmp installer/LICENSE.txt installer/PRIVACY.txt "$WORK/" && cp assets/icon.ico "$WORK/icon.ico"
+RC="$ROOT/node_modules/electron-winstaller/vendor/rcedit.exe"   # rcedit 1.x (MIT), stamps the icon onto Penny.exe at install time
+echo "e2df7b664db830f159d0dc6b3da8a95442cca175b9577f2d19952646d37ac32f  $RC" | sha256sum -c --quiet - || { echo "rcedit.exe missing or changed (run npm ci)"; exit 1; }
+cp "$RC" "$WORK/rcedit.exe"
 OUT="$OUTDIR/Penny-Setup-$VER.exe"
 SUPPORT=""
 SURL=$(node -p "require('$ROOT/renderer/publisher.js').supportUrl")
 [ -n "$SURL" ] && SUPPORT="WriteRegStr HKCU \"\${UNINST_KEY}\" \"HelpLink\" \"$SURL\""
 sed -e "s#__SHA__#$SHA#" -e "s#__PLUGINS__#$PLUG#" -e "s#__OUT__#$OUT#" -e "s#__ICON__#$WORK/icon.ico#g" \
-    -e "s#__LICENSE__#$WORK/LICENSE.txt#g" -e "s#__PRIVACY__#$WORK/PRIVACY.txt#g" -e "s#__APPDIR__#$WORK/app#g" \
+    -e "s#__LICENSE__#$WORK/LICENSE.txt#g" -e "s#__PRIVACY__#$WORK/PRIVACY.txt#g" -e "s#__APPDIR__#$WORK/app#g" -e "s#__RCEDIT__#$WORK/rcedit.exe#g" \
     -e "s#__VERSION__#$VER#g" -e "s#__PUBLISHER__#$PUB#g" -e "s#__YEAR__#$YEAR#g" -e "s#__SUPPORT_REG__#$SUPPORT#" \
     installer/nsis/penny.nsi > "$WORK/penny.nsi"
 cd "$WORK"

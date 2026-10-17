@@ -11,5 +11,6 @@
 - **Easier to get around:** the sidebar is grouped (Everyday, Plan ahead, Understand) with counts for due reminders, due bills and insights that need you; long pages get an "On this page" bar that follows your scroll; a back-to-top button; arrow keys move through lists on every tab, and / jumps to search.
 - **Transactions:** the filter bar stays put while you scroll, day headings stick, and every active filter shows as a chip you can remove with one click.
 - **Join the Penny community** on Discord, from the sidebar (you can hide it), Settings › Updates & help, or Ctrl K.
+- **The new icon everywhere in Windows**, even if you update from inside the app: Start menu, desktop and pinned taskbar shortcuts, the jump list, the taskbar button, notifications and Settings › Apps all switch to the new logo on first start. A fresh install also puts the Penny icon and name on Penny.exe itself, so Task Manager and File Explorer say Penny instead of Electron.
 - The window opens in your theme's colour, so there's no white flash on launch.
 - Simpler Settings: the accent colours, glass style, backgrounds and blur options are gone.
